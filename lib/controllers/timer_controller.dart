@@ -110,7 +110,8 @@ class TimerController extends ChangeNotifier with WidgetsBindingObserver {
   void _handleSetComplete() {
     _audioService.playSetEnd();
 
-    if (_timer.isCompleted) {
+    // Mevcut set tamamlandı, şimdi kontrol et
+    if (_timer.currentSet >= _timer.totalSets) {
       _completeWorkout();
     } else if (_timer.shouldRest) {
       _startRestPeriod();

@@ -44,7 +44,7 @@ class TimerModel {
     );
   }
 
-  double get progress => (totalSets - currentSet + 1) / totalSets;
+  double get progress => currentSet / totalSets;
   bool get isCompleted => currentSet > totalSets;
   bool get shouldRest => currentSet % restAfterSets == 0 && currentSet < totalSets;
 }

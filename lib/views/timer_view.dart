@@ -3,142 +3,119 @@ import 'package:provider/provider.dart';
 import '../controllers/timer_controller.dart';
 import '../models/timer_model.dart';
 
-class TimerView extends StatelessWidget {
+class TimerView extends StatefulWidget {
   const TimerView({super.key});
+
+  @override
+  State<TimerView> createState() => _TimerViewState();
+}
+
+class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late AnimationController _progressController;
+  late Animation<double> _pulseAnimation;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      duration: const Duration(seconds: 1),
+      vsync: this,
+    );
+    _progressController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
+    _pulseAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.1,
+    ).animate(CurvedAnimation(
+      parent: _pulseController,
+      curve: Curves.easeInOut,
+    ));
+
+    _scaleAnimation = Tween<double>(
+      begin: 0.95,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _progressController,
+      curve: Curves.elasticOut,
+    ));
+
+    _pulseController.repeat(reverse: true);
+    _progressController.forward();
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    _progressController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A0A),
-      appBar: AppBar(
-        title: const Text(
-          'SetTimer',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 24,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-      ),
       body: Consumer<TimerController>(
         builder: (context, controller, child) {
           final timer = controller.timer;
 
           // Show completion message
           if (timer.state == TimerState.completed) {
-            return Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Color(0xFF0A0A0A),
-                    Color(0xFF1A1A1A),
-                    Color(0xFF2A2A2A),
-                  ],
-                ),
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.check_circle,
-                      size: 100,
-                      color: Colors.green,
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Workout Complete!',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            color: Colors.white,
-                          ),
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton.icon(
-                      onPressed: controller.resetTimer,
-                      icon: const Icon(Icons.refresh, color: Colors.white),
-                      label: const Text(
-                        'Start New Workout',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF00D4AA),
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton.icon(
-                      onPressed: () => _showSettingsModal(context, controller),
-                      icon: const Icon(Icons.settings, color: Colors.white70),
-                      label: const Text(
-                        'Settings',
-                        style: TextStyle(color: Colors.white70),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white30,
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
+            return _buildCompletionScreen(controller);
           }
 
           return Container(
             decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+              gradient: RadialGradient(
+                center: Alignment.center,
+                radius: 1.5,
                 colors: [
-                  Color(0xFF0A0A0A),
                   Color(0xFF1A1A1A),
-                  Color(0xFF2A2A2A),
+                  Color(0xFF0A0A0A),
+                  Color(0xFF050505),
                 ],
               ),
             ),
             child: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.all(20.0),
                 child: Column(
                   children: [
-                    // Settings button
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: IconButton(
-                        onPressed: () => _showSettingsModal(context, controller),
-                        icon: const Icon(
-                          Icons.settings,
-                          color: Colors.white70,
-                          size: 28,
-                        ),
-                      ),
+                    // Header with settings
+                    _buildHeader(controller),
+
+                    const SizedBox(height: 30),
+
+                    // Progress section with animation
+                    AnimatedBuilder(
+                      animation: _scaleAnimation,
+                      builder: (context, child) {
+                        return Transform.scale(
+                          scale: _scaleAnimation.value,
+                          child: _buildProgressSection(timer),
+                        );
+                      },
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 50),
 
-                    // Progress section
-                    _buildProgressSection(timer),
-
-                    const SizedBox(height: 40),
-
-                    // Timer circle
+                    // Main timer circle
                     Expanded(
                       child: Center(
-                        child: _buildTimerCircle(timer),
+                        child: _buildAnimatedTimerCircle(timer),
                       ),
                     ),
 
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 50),
 
-                    // Control buttons
-                    _buildControlButtons(context, controller, timer),
+                    // Enhanced control buttons
+                    _buildEnhancedControlButtons(controller, timer),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 30),
                   ],
                 ),
               ),
@@ -149,36 +126,53 @@ class TimerView extends StatelessWidget {
     );
   }
 
-  Widget _buildProgressSection(TimerModel timer) {
-    return Column(
+  Widget _buildHeader(TimerController controller) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // Set counter
-        Text(
-          'SET ${timer.currentSet} OF ${timer.totalSets}',
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            letterSpacing: 2,
+        // App title with glow effect
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF00D4AA), Color(0xFF00B4AA)],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF00D4AA).withOpacity(0.3),
+                blurRadius: 15,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: const Text(
+            'SetTimer',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              color: Colors.white,
+              letterSpacing: 1,
+            ),
           ),
         ),
-        const SizedBox(height: 16),
 
-        // Progress bar
+        // Settings button with enhanced design
         Container(
-          height: 6,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(3),
-            color: Colors.white10,
+            shape: BoxShape.circle,
+            color: Colors.white.withOpacity(0.1),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.2),
+              width: 1,
+            ),
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(3),
-            child: LinearProgressIndicator(
-              value: 1 - timer.progress,
-              backgroundColor: Colors.transparent,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                timer.isInRestPeriod ? const Color(0xFFFF6B35) : const Color(0xFF00D4AA),
-              ),
+          child: IconButton(
+            onPressed: () => _showSettingsModal(context, controller),
+            icon: const Icon(
+              Icons.tune,
+              color: Colors.white70,
+              size: 24,
             ),
           ),
         ),
@@ -186,94 +180,222 @@ class TimerView extends StatelessWidget {
     );
   }
 
-  Widget _buildTimerCircle(TimerModel timer) {
-    final isRest = timer.isInRestPeriod;
-    final primaryColor = isRest ? const Color(0xFFFF6B35) : const Color(0xFF00D4AA);
-
+  Widget _buildCompletionScreen(TimerController controller) {
     return Container(
-      width: 280,
-      height: 280,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
+      decoration: const BoxDecoration(
         gradient: RadialGradient(
+          center: Alignment.center,
+          radius: 1.0,
           colors: [
-            primaryColor.withOpacity(0.1),
-            primaryColor.withOpacity(0.05),
-            Colors.transparent,
+            Color(0xFF1A4A1A),
+            Color(0xFF0A2A0A),
+            Color(0xFF050A05),
           ],
         ),
-        border: Border.all(
-          color: primaryColor.withOpacity(0.3),
-          width: 2,
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Animated completion icon
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 800),
+              builder: (context, value, child) {
+                return Transform.scale(
+                  scale: value,
+                  child: Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const RadialGradient(
+                        colors: [Color(0xFF00FF88), Color(0xFF00CC66)],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF00FF88).withOpacity(0.5),
+                          blurRadius: 30,
+                          spreadRadius: 10,
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.check_circle_outline,
+                      size: 60,
+                      color: Colors.white,
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            const SizedBox(height: 40),
+
+            const Text(
+              'Workout Complete!',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1,
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            Text(
+              'Great job! You completed all sets.',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.7),
+                fontSize: 16,
+              ),
+            ),
+
+            const SizedBox(height: 50),
+
+            // Enhanced action buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildActionButton(
+                  icon: Icons.settings,
+                  label: 'Settings',
+                  color: Colors.white30,
+                  onPressed: () => _showSettingsModal(context, controller),
+                ),
+                _buildActionButton(
+                  icon: Icons.refresh,
+                  label: 'New Workout',
+                  color: const Color(0xFF00D4AA),
+                  onPressed: controller.resetTimer,
+                  isPrimary: true,
+                ),
+              ],
+            ),
+          ],
         ),
       ),
-      child: Stack(
-        children: [
-          // Animated progress ring
-          Positioned.fill(
-            child: CircularProgressIndicator(
-              value: timer.isInRestPeriod
-                  ? (timer.restDurationSeconds - timer.remainingSeconds) / timer.restDurationSeconds
-                  : (timer.setDurationSeconds - timer.remainingSeconds) / timer.setDurationSeconds,
-              strokeWidth: 8,
-              backgroundColor: Colors.white10,
-              valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onPressed,
+    bool isPrimary = false,
+  }) {
+    return Column(
+      children: [
+        Container(
+          width: 70,
+          height: 70,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color.withOpacity(isPrimary ? 1.0 : 0.3),
+            boxShadow: isPrimary
+                ? [
+                    BoxShadow(
+                      color: color.withOpacity(0.4),
+                      blurRadius: 20,
+                      spreadRadius: 5,
+                    ),
+                  ]
+                : null,
+          ),
+          child: IconButton(
+            onPressed: onPressed,
+            icon: Icon(
+              icon,
+              color: Colors.white,
+              size: 28,
             ),
           ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.8),
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
 
-          // Content
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Phase indicator
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    color: primaryColor.withOpacity(0.2),
-                    border: Border.all(
-                      color: primaryColor.withOpacity(0.5),
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    timer.isInRestPeriod ? 'REST' : 'WORK',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: primaryColor,
-                      letterSpacing: 1,
-                    ),
+  Widget _buildProgressSection(TimerModel timer) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: Colors.white.withOpacity(0.05),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.1),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          // Set counter with enhanced styling
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  color: (timer.isInRestPeriod ? const Color(0xFFFF6B35) : const Color(0xFF00D4AA)).withOpacity(0.2),
+                ),
+                child: Text(
+                  '${timer.currentSet}',
+                  style: TextStyle(
+                    color: timer.isInRestPeriod ? const Color(0xFFFF6B35) : const Color(0xFF00D4AA),
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-
-                const SizedBox(height: 20),
-
-                // Time display
-                Text(
-                  _formatTime(timer.remainingSeconds),
-                  style: const TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.w300,
-                    color: Colors.white,
-                    height: 1,
-                  ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'of',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.5),
+                  fontSize: 16,
                 ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '${timer.totalSets}',
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
 
-                const SizedBox(height: 8),
+          const SizedBox(height: 20),
 
-                // State indicator
-                if (timer.state != TimerState.idle)
-                  Text(
-                    _getStateText(timer.state),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.white60,
-                      letterSpacing: 1,
-                    ),
-                  ),
-              ],
+          // Enhanced progress bar
+          Container(
+            height: 8,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(4),
+              color: Colors.white.withOpacity(0.1),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: timer.progress,
+                backgroundColor: Colors.transparent,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  timer.isInRestPeriod ? const Color(0xFFFF6B35) : const Color(0xFF00D4AA),
+                ),
+              ),
             ),
           ),
         ],
@@ -281,35 +403,197 @@ class TimerView extends StatelessWidget {
     );
   }
 
-  Widget _buildControlButtons(BuildContext context, TimerController controller, TimerModel timer) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        // Reset button
-        _buildControlButton(
-          icon: Icons.refresh,
-          onPressed: controller.resetTimer,
-          color: Colors.white30,
-          size: 56,
-        ),
+  Widget _buildAnimatedTimerCircle(TimerModel timer) {
+    final isRest = timer.isInRestPeriod;
+    final primaryColor = isRest ? const Color(0xFFFF6B35) : const Color(0xFF00D4AA);
+    final isRunning = timer.state == TimerState.running || timer.state == TimerState.resting;
 
-        // Main play/pause button
-        _buildControlButton(
-          icon: timer.state == TimerState.running || timer.state == TimerState.resting ? Icons.pause : Icons.play_arrow,
-          onPressed: timer.state == TimerState.running || timer.state == TimerState.resting ? controller.pauseTimer : controller.startTimer,
-          color: timer.isInRestPeriod ? const Color(0xFFFF6B35) : const Color(0xFF00D4AA),
-          size: 72,
-          isMain: true,
-        ),
+    return AnimatedBuilder(
+      animation: isRunning ? _pulseAnimation : _progressController,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: isRunning ? _pulseAnimation.value : 1.0,
+          child: Container(
+            width: 320,
+            height: 320,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  primaryColor.withOpacity(0.15),
+                  primaryColor.withOpacity(0.05),
+                  Colors.transparent,
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: primaryColor.withOpacity(0.3),
+                  blurRadius: 30,
+                  spreadRadius: 5,
+                ),
+              ],
+            ),
+            child: Stack(
+              children: [
+                // Outer ring
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: primaryColor.withOpacity(0.3),
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                ),
 
-        // Settings button (placeholder for symmetry)
-        _buildControlButton(
-          icon: Icons.tune,
-          onPressed: () => _showSettingsModal(context, controller),
-          color: Colors.white30,
-          size: 56,
+                // Progress ring
+                Positioned.fill(
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: CircularProgressIndicator(
+                      value: timer.isInRestPeriod
+                          ? (timer.restDurationSeconds - timer.remainingSeconds) / timer.restDurationSeconds
+                          : (timer.setDurationSeconds - timer.remainingSeconds) / timer.setDurationSeconds,
+                      strokeWidth: 12,
+                      backgroundColor: Colors.white.withOpacity(0.1),
+                      valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                      strokeCap: StrokeCap.round,
+                    ),
+                  ),
+                ),
+
+                // Center content
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Phase indicator with glow
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(25),
+                          color: primaryColor.withOpacity(0.2),
+                          border: Border.all(
+                            color: primaryColor.withOpacity(0.6),
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: primaryColor.withOpacity(0.4),
+                              blurRadius: 15,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          timer.isInRestPeriod ? 'REST' : 'WORK',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: primaryColor,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 30),
+
+                      // Time display with enhanced styling
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(15),
+                          color: Colors.black.withOpacity(0.3),
+                        ),
+                        child: Text(
+                          _formatTime(timer.remainingSeconds),
+                          style: const TextStyle(
+                            fontSize: 56,
+                            fontWeight: FontWeight.w200,
+                            color: Colors.white,
+                            height: 1,
+                            fontFeatures: [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // State indicator
+                      if (timer.state != TimerState.idle)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.white.withOpacity(0.1),
+                          ),
+                          child: Text(
+                            _getStateText(timer.state),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white.withOpacity(0.8),
+                              letterSpacing: 1,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildEnhancedControlButtons(TimerController controller, TimerModel timer) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
+        color: Colors.white.withOpacity(0.05),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.1),
+          width: 1,
         ),
-      ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          // Reset button
+          _buildControlButton(
+            icon: Icons.refresh,
+            onPressed: controller.resetTimer,
+            color: Colors.white.withOpacity(0.3),
+            size: 60,
+            label: 'Reset',
+          ),
+
+          // Main play/pause button
+          _buildControlButton(
+            icon: timer.state == TimerState.running || timer.state == TimerState.resting ? Icons.pause : Icons.play_arrow,
+            onPressed:
+                timer.state == TimerState.running || timer.state == TimerState.resting ? controller.pauseTimer : controller.startTimer,
+            color: timer.isInRestPeriod ? const Color(0xFFFF6B35) : const Color(0xFF00D4AA),
+            size: 80,
+            isMain: true,
+            label: timer.state == TimerState.running || timer.state == TimerState.resting ? 'Pause' : 'Start',
+          ),
+
+          // Settings button
+          _buildControlButton(
+            icon: Icons.tune,
+            onPressed: () => _showSettingsModal(context, controller),
+            color: Colors.white.withOpacity(0.3),
+            size: 60,
+            label: 'Settings',
+          ),
+        ],
+      ),
     );
   }
 
@@ -318,44 +602,64 @@ class TimerView extends StatelessWidget {
     required VoidCallback onPressed,
     required Color color,
     required double size,
+    required String label,
     bool isMain = false,
   }) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: isMain
-            ? RadialGradient(
-                colors: [
-                  color,
-                  color.withOpacity(0.8),
-                ],
-              )
-            : null,
-        color: isMain ? null : color.withOpacity(0.2),
-        border: Border.all(
-          color: color.withOpacity(0.5),
-          width: 2,
+    return Column(
+      children: [
+        Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: isMain
+                ? RadialGradient(
+                    colors: [
+                      color,
+                      color.withOpacity(0.8),
+                    ],
+                  )
+                : null,
+            color: isMain ? null : color,
+            boxShadow: isMain
+                ? [
+                    BoxShadow(
+                      color: color.withOpacity(0.4),
+                      blurRadius: 25,
+                      spreadRadius: 3,
+                    ),
+                  ]
+                : [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 10,
+                      spreadRadius: 1,
+                    ),
+                  ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(size / 2),
+              onTap: onPressed,
+              child: Icon(
+                icon,
+                color: Colors.white,
+                size: size * 0.4,
+              ),
+            ),
+          ),
         ),
-        boxShadow: isMain
-            ? [
-                BoxShadow(
-                  color: color.withOpacity(0.3),
-                  blurRadius: 20,
-                  spreadRadius: 2,
-                ),
-              ]
-            : null,
-      ),
-      child: IconButton(
-        onPressed: onPressed,
-        icon: Icon(
-          icon,
-          color: isMain ? Colors.white : color,
-          size: size * 0.4,
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.7),
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
         ),
-      ),
+      ],
     );
   }
 
