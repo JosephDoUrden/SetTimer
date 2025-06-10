@@ -56,12 +56,14 @@ android {
             signingConfig signingConfigs.debug
         }
         release {
-            // For development/testing, use debug signing config for release too.
             signingConfig signingConfigs.debug
-
             minifyEnabled true
-            shrinkResources true // Explicitly enable resource shrinking
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            
+            // Optimize for distribution
+            zipAlignEnabled true
+            debuggable false
         }
     }
     

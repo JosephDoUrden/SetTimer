@@ -233,6 +233,23 @@ class TimerController extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.paused:
+        _handleAppPaused();
+        break;
+      case AppLifecycleState.resumed:
+        _handleAppResumed();
+        break;
+      case AppLifecycleState.detached:
+        _handleAppDetached();
+        break;
+      default:
+        break;
+    }
+  }
+
+  @override
   void dispose() {
     _countdownTimer?.cancel();
     _audioService.stopAllSounds();

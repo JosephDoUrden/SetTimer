@@ -16,22 +16,22 @@ A minimalist workout timer app designed specifically for set-based workouts like
 
 ## 📱 Screenshots
 
-![SetTimer App Interface](https://via.placeholder.com/300x600/0A0A0A/00D4AA?text=SetTimer+UI)
+*Screenshots will be added after app store submission*
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
 - Flutter 3.5.3 or higher
-- Dart SDK
+- Dart SDK 3.5.3 or higher
 - Android Studio / Xcode for device testing
 
 ### Installation
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/JosephDoUrden/SetTimer.git
-   cd SetTimer
+   git clone https://github.com/yusufhansacak/settimer.git
+   cd settimer
    ```
 
 2. **Install dependencies**
@@ -107,17 +107,18 @@ lib/
 
 ### Key Technologies
 
-- **State Management**: Provider pattern
-- **Audio**: flutter_ringtone_player for system sounds
-- **Background Processing**: Custom lifecycle management
-- **UI**: Material Design 3 with custom dark theme
+- **State Management**: Provider pattern with ChangeNotifier
+- **Audio**: flutter_ringtone_player for system sounds and notifications
+- **Background Processing**: App lifecycle management with timer synchronization
+- **UI**: Material Design 3 with custom dark theme and animations
+- **Platform Integration**: Native iOS audio session and Android wake lock support
 
 ## 🎨 Design Philosophy
 
 SetTimer embraces minimalism with a focus on:
 
 - **Zero Distraction**: Clean interface without unnecessary elements
-- **Workout Flow**: Automatic progression eliminates manual intervention
+- **Workflow**: Automatic progression eliminates manual intervention
 - **Visual Clarity**: High contrast dark theme with accent colors
 - **Accessibility**: Large touch targets and clear visual hierarchy
 
@@ -198,9 +199,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support & Contact
 
-- **Issues**: [GitHub Issues](https://github.com/JosephDoUrden/SetTimer/issues)
+- **Issues**: [GitHub Issues](https://github.com/yusufhansacak/settimer/issues)
 - **Email**: yusufhansck@gmail.com
-- **Documentation**: [Wiki](https://github.com/JosephDoUrden/SetTimer/wiki)
 
 ## 👨‍💻 Author
 

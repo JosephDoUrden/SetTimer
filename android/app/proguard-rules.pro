@@ -7,7 +7,7 @@
 -keep class io.flutter.plugins.**  { *; }
 
 # Flutter Ringtone Player
--keep class com.example.flutter_ringtone_player.** { *; }
+-keep class com.artchoi.flutter_ringtone_player.** { *; }
 
 # Provider package
 -keep class com.google.gson.** { *; }

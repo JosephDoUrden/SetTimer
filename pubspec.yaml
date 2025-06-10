@@ -1,5 +1,5 @@
 name: settimer
-description: "SetTimer - A workout timer app with automatic set and rest cycles"
+description: "SetTimer - A minimalist workout timer for set-based workouts, HIIT, and interval training. Focus on your workout while we handle the timing."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.5.3
+  sdk: '>=3.0.0 <4.0.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -33,7 +33,8 @@ dependencies:
 
   # State Management
   provider: ^6.1.1
-  flutter_ringtone_player: ^4.0.0+2
+  flutter_ringtone_player: ^4.0.0+4
+  path_provider: ^2.0.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -85,3 +86,8 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+  # App icon configuration
+  # Run: flutter pub get && flutter pub run flutter_launcher_icons:main
+  # after adding flutter_launcher_icons dependency if needed
+

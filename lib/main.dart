@@ -13,11 +13,11 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  runApp(const SetTimerApp());
+  runApp(const WorkoutSetTimerApp());
 }
 
-class SetTimerApp extends StatelessWidget {
-  const SetTimerApp({super.key});
+class WorkoutSetTimerApp extends StatelessWidget {
+  const WorkoutSetTimerApp({super.key});
 
   @override
   Widget build(BuildContext context) {

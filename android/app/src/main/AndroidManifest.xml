@@ -4,9 +4,13 @@
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
-        android:label="settimer"
+        android:label="SetTimer"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:allowBackup="false"
+        android:supportsRtl="true"
+        android:theme="@style/LaunchTheme">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -25,7 +29,7 @@
                 android:name="io.flutter.embedding.android.NormalTheme"
                 android:resource="@style/NormalTheme"
             />
-            <intent-filter>
+            <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>

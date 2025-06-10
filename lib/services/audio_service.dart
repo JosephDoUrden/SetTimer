@@ -1,54 +1,85 @@
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 
 class AudioService {
-  final FlutterRingtonePlayer _player = FlutterRingtonePlayer();
+  static final AudioService _instance = AudioService._internal();
+  factory AudioService() => _instance;
+  AudioService._internal();
 
   void playSetStart() {
-    _player.play(
-      android: AndroidSounds.notification,
-      ios: IosSounds.glass,
-      looping: false,
-      volume: 0.8,
-    );
+    try {
+      FlutterRingtonePlayer().play(
+        android: AndroidSounds.notification,
+        ios: IosSounds.glass,
+        looping: false,
+        volume: 0.8,
+        asAlarm: false,
+      );
+    } catch (e) {
+      print('Error playing set start sound: $e');
+    }
   }
 
   void playSetEnd() {
-    _player.play(
-      android: AndroidSounds.alarm,
-      ios: IosSounds.alarm,
-      looping: false,
-      volume: 0.8,
-    );
+    try {
+      FlutterRingtonePlayer().play(
+        android: AndroidSounds.alarm,
+        ios: IosSounds.alarm,
+        looping: false,
+        volume: 0.8,
+        asAlarm: false,
+      );
+    } catch (e) {
+      print('Error playing set end sound: $e');
+    }
   }
 
   void playRestStart() {
-    _player.play(
-      android: AndroidSounds.ringtone,
-      ios: IosSounds.receivedMessage,
-      looping: false,
-      volume: 0.6,
-    );
+    try {
+      FlutterRingtonePlayer().play(
+        android: AndroidSounds.ringtone,
+        ios: IosSounds.receivedMessage,
+        looping: false,
+        volume: 0.6,
+        asAlarm: false,
+      );
+    } catch (e) {
+      print('Error playing rest start sound: $e');
+    }
   }
 
   void playRestEnd() {
-    _player.play(
-      android: AndroidSounds.notification,
-      ios: IosSounds.glass,
-      looping: false,
-      volume: 0.8,
-    );
+    try {
+      FlutterRingtonePlayer().play(
+        android: AndroidSounds.notification,
+        ios: IosSounds.glass,
+        looping: false,
+        volume: 0.8,
+        asAlarm: false,
+      );
+    } catch (e) {
+      print('Error playing rest end sound: $e');
+    }
   }
 
   void playWorkoutComplete() {
-    _player.play(
-      android: AndroidSounds.ringtone,
-      ios: IosSounds.triTone,
-      looping: false,
-      volume: 1.0,
-    );
+    try {
+      FlutterRingtonePlayer().play(
+        android: AndroidSounds.ringtone,
+        ios: IosSounds.triTone,
+        looping: false,
+        volume: 1.0,
+        asAlarm: false,
+      );
+    } catch (e) {
+      print('Error playing workout complete sound: $e');
+    }
   }
 
   void stopAllSounds() {
-    _player.stop();
+    try {
+      FlutterRingtonePlayer().stop();
+    } catch (e) {
+      print('Error stopping sounds: $e');
+    }
   }
 }
