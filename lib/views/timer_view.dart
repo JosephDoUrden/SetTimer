@@ -56,6 +56,17 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  // Helper method to get responsive sizing
+  double _getResponsiveSize(BuildContext context, double baseSize) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final scaleFactor = screenWidth / 375; // Base iPhone width
+    return baseSize * scaleFactor.clamp(0.8, 1.5);
+  }
+
+  bool _isSmallScreen(BuildContext context) {
+    return MediaQuery.of(context).size.height < 700;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -128,17 +139,19 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
   }
 
   Widget _buildHeader(TimerController controller) {
+    final buttonSize = _getResponsiveSize(context, 48);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         // App title with glow effect
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: EdgeInsets.symmetric(horizontal: _getResponsiveSize(context, 16), vertical: _getResponsiveSize(context, 8)),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [Color(0xFF00D4AA), Color(0xFF00B4AA)],
             ),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(_getResponsiveSize(context, 20)),
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFF00D4AA).withOpacity(0.3),
@@ -147,11 +160,11 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
               ),
             ],
           ),
-          child: const Text(
+          child: Text(
             'SetTimer',
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              fontSize: 18,
+              fontSize: _getResponsiveSize(context, 18),
               color: Colors.white,
               letterSpacing: 1,
             ),
@@ -160,6 +173,8 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
 
         // Settings button with enhanced design
         Container(
+          width: buttonSize,
+          height: buttonSize,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: Colors.white.withOpacity(0.1),
@@ -170,10 +185,10 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
           ),
           child: IconButton(
             onPressed: () => _showSettingsModal(context, controller),
-            icon: const Icon(
+            icon: Icon(
               Icons.tune,
               color: Colors.white70,
-              size: 24,
+              size: _getResponsiveSize(context, 24),
             ),
           ),
         ),
@@ -409,143 +424,160 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
     final primaryColor = isRest ? const Color(0xFFFF6B35) : const Color(0xFF00D4AA);
     final isRunning = timer.state == TimerState.running || timer.state == TimerState.resting;
 
-    return AnimatedBuilder(
-      animation: isRunning ? _pulseAnimation : _progressController,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: isRunning ? _pulseAnimation.value : 1.0,
-          child: Container(
-            width: 320,
-            height: 320,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  primaryColor.withOpacity(0.15),
-                  primaryColor.withOpacity(0.05),
-                  Colors.transparent,
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: primaryColor.withOpacity(0.3),
-                  blurRadius: 30,
-                  spreadRadius: 5,
-                ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                // Outer ring
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: primaryColor.withOpacity(0.3),
-                        width: 2,
-                      ),
-                    ),
-                  ),
-                ),
+    // Calculate responsive circle size based on screen constraints
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
 
-                // Progress ring
-                Positioned.fill(
-                  child: Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: CircularProgressIndicator(
-                      value: timer.isInRestPeriod
-                          ? (timer.restDurationSeconds - timer.remainingSeconds) / timer.restDurationSeconds
-                          : (timer.setDurationSeconds - timer.remainingSeconds) / timer.setDurationSeconds,
-                      strokeWidth: 12,
-                      backgroundColor: Colors.white.withOpacity(0.1),
-                      valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
-                      strokeCap: StrokeCap.round,
-                    ),
-                  ),
-                ),
+    // Use LayoutBuilder to get the actual available space in the parent Expanded widget
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Calculate the maximum possible size while maintaining a circular shape
+        final maxSize = constraints.maxWidth < constraints.maxHeight
+            ? constraints.maxWidth * 0.9 // 90% of available width
+            : constraints.maxHeight * 0.9; // 90% of available height
 
-                // Center content
-                Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Phase indicator with glow
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(25),
-                          color: primaryColor.withOpacity(0.2),
-                          border: Border.all(
-                            color: primaryColor.withOpacity(0.6),
-                            width: 2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: primaryColor.withOpacity(0.4),
-                              blurRadius: 15,
-                              spreadRadius: 2,
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          timer.isInRestPeriod ? 'REST' : 'WORK',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: primaryColor,
-                            letterSpacing: 2,
-                          ),
-                        ),
-                      ),
+        // Apply minimum and maximum constraints to avoid too small or too large circles
+        final circleSize = maxSize.clamp(240.0, 320.0);
 
-                      const SizedBox(height: 30),
-
-                      // Time display with enhanced styling
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(15),
-                          color: Colors.black.withOpacity(0.3),
-                        ),
-                        child: Text(
-                          _formatTime(timer.remainingSeconds),
-                          style: const TextStyle(
-                            fontSize: 56,
-                            fontWeight: FontWeight.w200,
-                            color: Colors.white,
-                            height: 1,
-                            fontFeatures: [FontFeature.tabularFigures()],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // State indicator
-                      if (timer.state != TimerState.idle)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.white.withOpacity(0.1),
-                          ),
-                          child: Text(
-                            _getStateText(timer.state),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.white.withOpacity(0.8),
-                              letterSpacing: 1,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
+        return AnimatedBuilder(
+          animation: isRunning ? _pulseAnimation : _progressController,
+          builder: (context, child) {
+            return Transform.scale(
+              scale: isRunning ? _pulseAnimation.value : 1.0,
+              child: Container(
+                width: circleSize,
+                height: circleSize, // Equal height and width for perfect circle
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      primaryColor.withOpacity(0.15),
+                      primaryColor.withOpacity(0.05),
+                      Colors.transparent,
                     ],
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: primaryColor.withOpacity(0.3),
+                      blurRadius: 30,
+                      spreadRadius: 5,
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+                child: Stack(
+                  children: [
+                    // Outer ring
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: primaryColor.withOpacity(0.3),
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Progress ring
+                    Positioned.fill(
+                      child: Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: CircularProgressIndicator(
+                          value: timer.isInRestPeriod
+                              ? (timer.restDurationSeconds - timer.remainingSeconds) / timer.restDurationSeconds
+                              : (timer.setDurationSeconds - timer.remainingSeconds) / timer.setDurationSeconds,
+                          strokeWidth: 12,
+                          backgroundColor: Colors.white.withOpacity(0.1),
+                          valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                          strokeCap: StrokeCap.round,
+                        ),
+                      ),
+                    ),
+
+                    // Center content
+                    Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Phase indicator with glow
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(25),
+                              color: primaryColor.withOpacity(0.2),
+                              border: Border.all(
+                                color: primaryColor.withOpacity(0.6),
+                                width: 2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: primaryColor.withOpacity(0.4),
+                                  blurRadius: 15,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              timer.isInRestPeriod ? 'REST' : 'WORK',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: primaryColor,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 30),
+
+                          // Time display with enhanced styling
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              color: Colors.black.withOpacity(0.3),
+                            ),
+                            child: Text(
+                              _formatTime(timer.remainingSeconds),
+                              style: const TextStyle(
+                                fontSize: 56,
+                                fontWeight: FontWeight.w200,
+                                color: Colors.white,
+                                height: 1,
+                                fontFeatures: [FontFeature.tabularFigures()],
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // State indicator
+                          if (timer.state != TimerState.idle)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: Colors.white.withOpacity(0.1),
+                              ),
+                              child: Text(
+                                _getStateText(timer.state),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white.withOpacity(0.8),
+                                  letterSpacing: 1,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         );
       },
     );
