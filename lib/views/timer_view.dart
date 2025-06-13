@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../controllers/timer_controller.dart';
 import '../models/timer_model.dart';
+import 'preset_selection_view.dart';
 
 class TimerView extends StatefulWidget {
   const TimerView({super.key});
@@ -161,36 +162,68 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
             ],
           ),
           child: Text(
-            'SetTimer',
+            'Workout Set Timer',
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              fontSize: _getResponsiveSize(context, 18),
+              fontSize: _getResponsiveSize(context, 16),
               color: Colors.white,
               letterSpacing: 1,
             ),
           ),
         ),
 
-        // Settings button with enhanced design
-        Container(
-          width: buttonSize,
-          height: buttonSize,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white.withOpacity(0.1),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.2),
-              width: 1,
+        // Action buttons
+        Row(
+          children: [
+            // Presets button
+            Container(
+              width: buttonSize,
+              height: buttonSize,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.1),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
+              child: IconButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PresetSelectionView(),
+                  ),
+                ),
+                icon: Icon(
+                  Icons.library_books,
+                  color: Colors.white70,
+                  size: _getResponsiveSize(context, 24),
+                ),
+              ),
             ),
-          ),
-          child: IconButton(
-            onPressed: () => _showSettingsModal(context, controller),
-            icon: Icon(
-              Icons.tune,
-              color: Colors.white70,
-              size: _getResponsiveSize(context, 24),
+            const SizedBox(width: 12),
+            // Settings button with enhanced design
+            Container(
+              width: buttonSize,
+              height: buttonSize,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.1),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
+              child: IconButton(
+                onPressed: () => _showSettingsModal(context, controller),
+                icon: Icon(
+                  Icons.tune,
+                  color: Colors.white70,
+                  size: _getResponsiveSize(context, 24),
+                ),
+              ),
             ),
-          ),
+          ],
         ),
       ],
     );

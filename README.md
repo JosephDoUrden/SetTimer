@@ -1,6 +1,6 @@
-# SetTimer 🏋️‍♂️
+# Workout Set Timer 🏋️‍♂️
 
-A minimalist workout timer app designed specifically for set-based workouts like ab/core training, HIIT, and interval training. Focus on your workout while SetTimer handles the timing automatically.
+A minimalist workout timer app designed specifically for set-based workouts like ab/core training, HIIT, and interval training. Focus on your workout while Workout Set Timer handles the timing automatically.
 
 ## ✨ Features
 
@@ -89,7 +89,7 @@ flutter build ios --release
 
 ## 🏗️ Architecture
 
-SetTimer follows clean architecture principles with MVC pattern:
+Workout Set Timer follows clean architecture principles with MVC pattern:
 
 ```
 lib/
@@ -115,7 +115,7 @@ lib/
 
 ## 🎨 Design Philosophy
 
-SetTimer embraces minimalism with a focus on:
+Workout Set Timer embraces minimalism with a focus on:
 
 - **Zero Distraction**: Clean interface without unnecessary elements
 - **Workflow**: Automatic progression eliminates manual intervention
@@ -213,6 +213,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**SetTimer** - Focus on your workout, let us handle the timing. 💪
+**Workout Set Timer** - Focus on your workout, let us handle the timing. 💪
 
 Built with ❤️ using Flutter
