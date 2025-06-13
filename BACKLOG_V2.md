@@ -22,24 +22,22 @@ This backlog covers the development roadmap for Workout Set Timer v2.0, transfor
   - "Ab Destroyer" (45s work, 15s rest, 6 rounds)
   - "HIIT Intervals" (30s work, 30s rest, 10 rounds)
   - "Endurance Builder" (60s work, 20s rest, 5 rounds)
-  - "Quick Burn" (25s work, 5s rest, 10 rounds)
-  - "Pyramid Power" (40s work, 20s rest, 7 rounds)
 - [X] **Testing & polish** (2 days)
 - [X] **Update navigation** (1 day)
 
 #### Sprint 1.2: Custom Template Management (2 weeks)
-- [ ] **Implement template saving** (3 days)
+- [X] **Implement template saving** (3 days)
   - Add "Save as Template" functionality
   - Template naming and validation
   - Local storage integration (SQLite)
-- [ ] **Template management UI** (4 days)
+- [X] **Template management UI** (4 days)
   - Template library screen
   - Edit/delete template functionality
   - Template categorization
-- [ ] **Template export/import** (3 days)
+- [X] **Template export/import** (3 days)
   - JSON export functionality
   - Import validation and error handling
-- [ ] **Testing & optimization** (4 days)
+- [X] **Testing & optimization** (4 days)
 
 #### Sprint 1.3: Template Sharing (1 week)
 - [ ] **QR Code sharing** (2 days)

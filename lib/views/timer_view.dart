@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../controllers/timer_controller.dart';
 import '../models/timer_model.dart';
+import '../widgets/save_template_dialog.dart';
 import 'preset_selection_view.dart';
 
 class TimerView extends StatefulWidget {
@@ -140,92 +141,116 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
   }
 
   Widget _buildHeader(TimerController controller) {
-    final buttonSize = _getResponsiveSize(context, 48);
+    final buttonSize = _getResponsiveSize(context, 44); // Slightly smaller for mobile
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isVerySmallScreen = screenWidth < 360;
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // App title with glow effect
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: _getResponsiveSize(context, 16), vertical: _getResponsiveSize(context, 8)),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF00D4AA), Color(0xFF00B4AA)],
-            ),
-            borderRadius: BorderRadius.circular(_getResponsiveSize(context, 20)),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF00D4AA).withOpacity(0.3),
-                blurRadius: 15,
-                spreadRadius: 2,
+        // App title with glow effect - flexible to take available space
+        Expanded(
+          child: Container(
+            padding: EdgeInsets.symmetric(
+                horizontal: _getResponsiveSize(context, isVerySmallScreen ? 12 : 16), vertical: _getResponsiveSize(context, 8)),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF00D4AA), Color(0xFF00B4AA)],
               ),
-            ],
-          ),
-          child: Text(
-            'Workout Set Timer',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: _getResponsiveSize(context, 16),
-              color: Colors.white,
-              letterSpacing: 1,
+              borderRadius: BorderRadius.circular(_getResponsiveSize(context, 20)),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF00D4AA).withOpacity(0.3),
+                  blurRadius: 15,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: Text(
+              isVerySmallScreen ? 'SetTimer' : 'Workout Set Timer',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: _getResponsiveSize(context, isVerySmallScreen ? 14 : 16),
+                color: Colors.white,
+                letterSpacing: 1,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ),
 
-        // Action buttons
+        const SizedBox(width: 12),
+
+        // Action buttons - compact layout
         Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             // Presets button
-            Container(
-              width: buttonSize,
-              height: buttonSize,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.1),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.2),
-                  width: 1,
-                ),
-              ),
-              child: IconButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const PresetSelectionView(),
-                  ),
-                ),
-                icon: Icon(
-                  Icons.library_books,
-                  color: Colors.white70,
-                  size: _getResponsiveSize(context, 24),
+            _buildHeaderButton(
+              icon: Icons.library_books,
+              color: Colors.white.withOpacity(0.1),
+              iconColor: Colors.white70,
+              size: buttonSize,
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const PresetSelectionView(),
                 ),
               ),
             ),
-            const SizedBox(width: 12),
-            // Settings button with enhanced design
-            Container(
-              width: buttonSize,
-              height: buttonSize,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.1),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.2),
-                  width: 1,
-                ),
-              ),
-              child: IconButton(
-                onPressed: () => _showSettingsModal(context, controller),
-                icon: Icon(
-                  Icons.tune,
-                  color: Colors.white70,
-                  size: _getResponsiveSize(context, 24),
-                ),
-              ),
+            SizedBox(width: isVerySmallScreen ? 8 : 10),
+            // Save Template button
+            _buildHeaderButton(
+              icon: Icons.bookmark_add,
+              color: Colors.blue.withOpacity(0.2),
+              iconColor: Colors.blue,
+              size: buttonSize,
+              onPressed: () => _showSaveTemplateDialog(context, controller),
+              tooltip: 'Save as Template',
+            ),
+            SizedBox(width: isVerySmallScreen ? 8 : 10),
+            // Settings button
+            _buildHeaderButton(
+              icon: Icons.tune,
+              color: Colors.white.withOpacity(0.1),
+              iconColor: Colors.white70,
+              size: buttonSize,
+              onPressed: () => _showSettingsModal(context, controller),
             ),
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildHeaderButton({
+    required IconData icon,
+    required Color color,
+    required Color iconColor,
+    required double size,
+    required VoidCallback onPressed,
+    String? tooltip,
+  }) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+        border: Border.all(
+          color: iconColor.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: IconButton(
+        onPressed: onPressed,
+        icon: Icon(
+          icon,
+          color: iconColor,
+          size: _getResponsiveSize(context, 20), // Slightly smaller icon
+        ),
+        tooltip: tooltip,
+        padding: EdgeInsets.zero,
+      ),
     );
   }
 
@@ -458,9 +483,6 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
     final isRunning = timer.state == TimerState.running || timer.state == TimerState.resting;
 
     // Calculate responsive circle size based on screen constraints
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-
     // Use LayoutBuilder to get the actual available space in the parent Expanded widget
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -763,6 +785,28 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
         child: _SettingsModal(controller: controller),
+      ),
+    );
+  }
+
+  void _showSaveTemplateDialog(BuildContext context, TimerController controller) {
+    showDialog(
+      context: context,
+      builder: (context) => SaveTemplateDialog(
+        currentSettings: controller.getCurrentSettingsAsPreset(
+          name: '',
+          description: '',
+        ),
+        onSaved: () {
+          // Optionally refresh presets or show a success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Template saved successfully!'),
+              backgroundColor: Color(0xFF00D4AA),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        },
       ),
     );
   }

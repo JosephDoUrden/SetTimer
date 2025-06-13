@@ -36,6 +36,13 @@ dependencies:
   flutter_ringtone_player: ^4.0.0+4
   path_provider: ^2.0.0
 
+  # Local Storage (Sprint 1.2)
+  sqflite: ^2.3.0
+
+  # Import/Export (Sprint 1.2)
+  share_plus: ^7.2.0
+  file_picker: ^6.1.1
+
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8

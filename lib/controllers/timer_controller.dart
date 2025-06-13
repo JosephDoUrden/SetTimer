@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/timer_model.dart';
+import '../models/preset_model.dart';
 import '../services/audio_service.dart';
 import '../services/background_service.dart';
 
@@ -230,6 +231,25 @@ class TimerController extends ChangeNotifier with WidgetsBindingObserver {
 
     _timer = _timer.copyWith(remainingSeconds: remainingSeconds);
     notifyListeners();
+  }
+
+  /// Get current timer settings as a PresetModel for saving as template
+  PresetModel getCurrentSettingsAsPreset({
+    required String name,
+    required String description,
+    String category = 'Custom',
+    String? iconName,
+  }) {
+    return PresetModel.createCustom(
+      name: name,
+      description: description,
+      totalSets: _timer.totalSets,
+      setDurationSeconds: _timer.setDurationSeconds,
+      restDurationSeconds: _timer.restDurationSeconds,
+      restAfterSets: _timer.restAfterSets,
+      category: category,
+      iconName: iconName,
+    );
   }
 
   @override

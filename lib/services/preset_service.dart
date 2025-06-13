@@ -1,12 +1,17 @@
 import 'dart:convert';
-import 'package:flutter/services.dart';
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/preset_model.dart';
+import 'database_service.dart';
 
 class PresetService {
   static final PresetService _instance = PresetService._internal();
   factory PresetService() => _instance;
   PresetService._internal();
 
+  final DatabaseService _databaseService = DatabaseService();
   List<PresetModel>? _cachedPresets;
 
   // Default workout presets
@@ -92,9 +97,8 @@ class PresetService {
     }
 
     try {
-      // For now, return default presets
-      // In future sprints, this will include custom presets from local storage
-      _cachedPresets = List.from(_defaultPresets);
+      final customPresets = await _databaseService.getAllCustomPresets();
+      _cachedPresets = [..._defaultPresets, ...customPresets];
       return _cachedPresets!;
     } catch (e) {
       print('Error loading presets: $e');
@@ -131,24 +135,103 @@ class PresetService {
     }
   }
 
-  /// Save custom preset (for future implementation)
+  /// Save custom preset
   Future<void> saveCustomPreset(PresetModel preset) async {
-    // TODO: Implement in Sprint 1.2 - Custom Template Management
-    throw UnimplementedError('Custom preset saving will be implemented in Sprint 1.2');
+    try {
+      await _databaseService.saveCustomPreset(preset);
+      clearCache(); // Clear cache to force reload
+    } catch (e) {
+      throw Exception('Failed to save custom preset: $e');
+    }
   }
 
-  /// Delete custom preset (for future implementation)
+  /// Delete custom preset
   Future<void> deleteCustomPreset(String id) async {
-    // TODO: Implement in Sprint 1.2 - Custom Template Management
-    throw UnimplementedError('Custom preset deletion will be implemented in Sprint 1.2');
+    try {
+      await _databaseService.deleteCustomPreset(id);
+      clearCache(); // Clear cache to force reload
+    } catch (e) {
+      throw Exception('Failed to delete custom preset: $e');
+    }
   }
 
-  /// Export preset to JSON
+  /// Update custom preset
+  Future<void> updateCustomPreset(PresetModel preset) async {
+    try {
+      await _databaseService.updateCustomPreset(preset);
+      clearCache(); // Clear cache to force reload
+    } catch (e) {
+      throw Exception('Failed to update custom preset: $e');
+    }
+  }
+
+  /// Check if preset name already exists
+  Future<bool> presetNameExists(String name, {String? excludeId}) async {
+    // Check default presets
+    final defaultExists =
+        _defaultPresets.any((preset) => preset.name.toLowerCase() == name.toLowerCase() && (excludeId == null || preset.id != excludeId));
+
+    if (defaultExists) return true;
+
+    // Check custom presets
+    return await _databaseService.presetNameExists(name, excludeId: excludeId);
+  }
+
+  /// Get custom presets count
+  Future<int> getCustomPresetCount() async {
+    return await _databaseService.getCustomPresetCount();
+  }
+
+  /// Export preset to JSON file
+  Future<void> exportPresetToFile(PresetModel preset) async {
+    try {
+      final jsonString = jsonEncode(preset.toJson());
+      final directory = await getApplicationDocumentsDirectory();
+      final fileName = '${preset.name.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.json';
+      final file = File('${directory.path}/$fileName');
+
+      await file.writeAsString(jsonString);
+
+      // Share the file
+      await Share.shareXFiles([XFile(file.path)], text: 'Workout preset: ${preset.name}');
+    } catch (e) {
+      throw Exception('Failed to export preset: $e');
+    }
+  }
+
+  /// Import preset from JSON file
+  Future<PresetModel?> importPresetFromFile() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
+
+      if (result != null && result.files.single.path != null) {
+        final file = File(result.files.single.path!);
+        final jsonString = await file.readAsString();
+        final preset = importPreset(jsonString);
+
+        // Generate new ID to avoid conflicts
+        final importedPreset = preset.copyWith(
+          id: PresetModel.generateCustomId(),
+          isDefault: false,
+        );
+
+        return importedPreset;
+      }
+      return null;
+    } catch (e) {
+      throw Exception('Failed to import preset: $e');
+    }
+  }
+
+  /// Export preset to JSON string
   String exportPreset(PresetModel preset) {
     return jsonEncode(preset.toJson());
   }
 
-  /// Import preset from JSON
+  /// Import preset from JSON string
   PresetModel importPreset(String jsonString) {
     try {
       final json = jsonDecode(jsonString) as Map<String, dynamic>;

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../controllers/timer_controller.dart';
 import '../models/preset_model.dart';
 import '../services/preset_service.dart';
+import 'template_management_view.dart';
 
 class PresetSelectionView extends StatefulWidget {
   const PresetSelectionView({super.key});
@@ -128,6 +129,28 @@ class _PresetSelectionViewState extends State<PresetSelectionView> {
                   ),
                 ),
               ],
+            ),
+          ),
+          // Template Management Button
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.blue.withOpacity(0.2),
+              border: Border.all(
+                color: Colors.blue.withOpacity(0.4),
+                width: 1,
+              ),
+            ),
+            child: IconButton(
+              onPressed: _navigateToTemplateManagement,
+              icon: const Icon(
+                Icons.library_books,
+                color: Colors.blue,
+                size: 24,
+              ),
+              tooltip: 'Manage Templates',
             ),
           ),
         ],
@@ -439,5 +462,19 @@ class _PresetSelectionViewState extends State<PresetSelectionView> {
         );
       }
     });
+  }
+
+  void _navigateToTemplateManagement() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const TemplateManagementView(),
+      ),
+    );
+
+    // Reload presets if templates were modified
+    if (result == true || mounted) {
+      _loadPresets();
+    }
   }
 }

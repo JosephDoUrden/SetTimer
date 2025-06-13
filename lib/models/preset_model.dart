@@ -9,6 +9,8 @@ class PresetModel {
   final String category;
   final String? iconName;
   final bool isDefault;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   const PresetModel({
     required this.id,
@@ -21,7 +23,42 @@ class PresetModel {
     this.category = 'Custom',
     this.iconName,
     this.isDefault = false,
+    this.createdAt,
+    this.updatedAt,
   });
+
+  /// Generate a custom preset ID
+  static String generateCustomId() {
+    return 'custom_${DateTime.now().millisecondsSinceEpoch}';
+  }
+
+  /// Create a new custom preset with auto-generated ID and timestamps
+  factory PresetModel.createCustom({
+    required String name,
+    required String description,
+    required int totalSets,
+    required int setDurationSeconds,
+    required int restDurationSeconds,
+    required int restAfterSets,
+    String category = 'Custom',
+    String? iconName,
+  }) {
+    final now = DateTime.now();
+    return PresetModel(
+      id: generateCustomId(),
+      name: name,
+      description: description,
+      totalSets: totalSets,
+      setDurationSeconds: setDurationSeconds,
+      restDurationSeconds: restDurationSeconds,
+      restAfterSets: restAfterSets,
+      category: category,
+      iconName: iconName,
+      isDefault: false,
+      createdAt: now,
+      updatedAt: now,
+    );
+  }
 
   PresetModel copyWith({
     String? id,
@@ -34,6 +71,8 @@ class PresetModel {
     String? category,
     String? iconName,
     bool? isDefault,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return PresetModel(
       id: id ?? this.id,
@@ -46,6 +85,8 @@ class PresetModel {
       category: category ?? this.category,
       iconName: iconName ?? this.iconName,
       isDefault: isDefault ?? this.isDefault,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -61,6 +102,8 @@ class PresetModel {
       'category': category,
       'iconName': iconName,
       'isDefault': isDefault,
+      if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
+      if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
     };
   }
 
@@ -76,6 +119,8 @@ class PresetModel {
       category: json['category'] as String? ?? 'Custom',
       iconName: json['iconName'] as String?,
       isDefault: json['isDefault'] as bool? ?? false,
+      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt'] as String) : null,
+      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt'] as String) : null,
     );
   }
 
