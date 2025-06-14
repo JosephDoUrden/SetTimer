@@ -5,6 +5,8 @@ import '../controllers/timer_controller.dart';
 import '../models/timer_model.dart';
 import '../widgets/save_template_dialog.dart';
 import 'preset_selection_view.dart';
+import 'audio_settings_view.dart';
+import 'voice_coaching_settings_view.dart';
 
 class TimerView extends StatefulWidget {
   const TimerView({super.key});
@@ -169,19 +171,21 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
   }
 
   Widget _buildHeader(TimerController controller) {
-    final buttonSize = _getResponsiveSize(context, 42);
     final screenWidth = MediaQuery.of(context).size.width;
     final isVerySmallScreen = screenWidth < 360;
+    final isSmallScreen = screenWidth < 400;
+
+    // Daha küçük buton boyutları ve daha az buton gösterimi
+    final buttonSize = isVerySmallScreen ? 36.0 : (isSmallScreen ? 38.0 : 42.0);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
       child: Row(
         children: [
-          // Modern app branding - sleek design
+          // Modern app branding - daha compact tasarım
           Expanded(
             child: Container(
-              padding: EdgeInsets.symmetric(
-                  horizontal: _getResponsiveSize(context, isVerySmallScreen ? 16 : 20), vertical: _getResponsiveSize(context, 12)),
+              padding: EdgeInsets.symmetric(horizontal: isVerySmallScreen ? 12 : 16, vertical: isVerySmallScreen ? 8 : 10),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -191,7 +195,7 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(_getResponsiveSize(context, 18)),
+                borderRadius: BorderRadius.circular(14),
                 border: Border.all(
                   color: Colors.white.withOpacity(0.15),
                   width: 1,
@@ -205,11 +209,11 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
                 ],
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // App icon with glow effect
+                  // App icon with glow effect - daha küçük
                   Container(
-                    padding: const EdgeInsets.all(6),
+                    padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: const LinearGradient(
@@ -218,7 +222,7 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
                       boxShadow: [
                         BoxShadow(
                           color: const Color(0xFF00D4AA).withOpacity(0.4),
-                          blurRadius: 8,
+                          blurRadius: 6,
                           spreadRadius: 1,
                         ),
                       ],
@@ -226,12 +230,12 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
                     child: Icon(
                       Icons.timer_outlined,
                       color: Colors.white,
-                      size: _getResponsiveSize(context, isVerySmallScreen ? 16 : 18),
+                      size: isVerySmallScreen ? 14 : 16,
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  // App title with modern typography
-                  Flexible(
+                  const SizedBox(width: 8),
+                  // App title - daha esnek
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
@@ -240,12 +244,13 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
                           'SetTimer',
                           style: TextStyle(
                             fontWeight: FontWeight.w700,
-                            fontSize: _getResponsiveSize(context, isVerySmallScreen ? 16 : 18),
+                            fontSize: isVerySmallScreen ? 14 : 16,
                             color: Colors.white,
-                            letterSpacing: 0.5,
+                            letterSpacing: 0.3,
                             height: 1.0,
                           ),
-                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          overflow: TextOverflow.visible,
                         ),
                         if (!isVerySmallScreen) ...[
                           const SizedBox(height: 1),
@@ -253,11 +258,12 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
                             'Workout Timer',
                             style: TextStyle(
                               fontWeight: FontWeight.w400,
-                              fontSize: _getResponsiveSize(context, 11),
+                              fontSize: 10,
                               color: Colors.white.withOpacity(0.7),
-                              letterSpacing: 0.3,
+                              letterSpacing: 0.2,
                               height: 1.0,
                             ),
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ],
@@ -269,9 +275,9 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
             ),
           ),
 
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
 
-          // Action buttons - modern glass morphism style
+          // Action buttons - daha az buton, daha küçük boyutlar
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -288,19 +294,54 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
                   ),
                 ),
               ),
-              SizedBox(width: isVerySmallScreen ? 8 : 10),
+              SizedBox(width: isVerySmallScreen ? 6 : 8),
 
-              // Settings button
-              _buildModernHeaderButton(
-                icon: Icons.tune_outlined,
-                color: Colors.white.withOpacity(0.08),
-                iconColor: Colors.white.withOpacity(0.8),
-                size: buttonSize,
-                onPressed: () => _showSettingsDialog(controller),
-              ),
-              SizedBox(width: isVerySmallScreen ? 8 : 10),
+              // Küçük ekranlarda sadece en önemli butonları göster
+              if (!isVerySmallScreen) ...[
+                // Audio settings button
+                _buildModernHeaderButton(
+                  icon: Icons.volume_up_outlined,
+                  color: const Color(0xFF9C27B0).withOpacity(0.15),
+                  iconColor: const Color(0xFF9C27B0),
+                  size: buttonSize,
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AudioSettingsView(),
+                    ),
+                  ),
+                ),
+                SizedBox(width: isVerySmallScreen ? 6 : 8),
+              ],
 
-              // Save template button - highlighted
+              // Settings dropdown - çok küçük ekranlarda diğer ayarları buraya koy
+              if (isVerySmallScreen) ...[
+                _buildModernHeaderButton(
+                  icon: Icons.more_vert,
+                  color: Colors.white.withOpacity(0.08),
+                  iconColor: Colors.white.withOpacity(0.8),
+                  size: buttonSize,
+                  onPressed: () => _showMoreOptionsMenu(context, controller),
+                ),
+                const SizedBox(width: 6),
+              ] else ...[
+                // Voice coaching button - sadece büyük ekranlarda
+                _buildModernHeaderButton(
+                  icon: Icons.record_voice_over_outlined,
+                  color: const Color(0xFF9C27B0).withOpacity(0.15),
+                  iconColor: const Color(0xFF9C27B0),
+                  size: buttonSize,
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const VoiceCoachingSettingsView(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+
+              // Save template button - her zaman göster
               _buildModernHeaderButton(
                 icon: Icons.bookmark_add_outlined,
                 color: const Color(0xFF00D4AA).withOpacity(0.15),
@@ -1111,6 +1152,112 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
             ),
           );
         },
+      ),
+    );
+  }
+
+  void _showMoreOptionsMenu(BuildContext context, TimerController controller) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1A1A1A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white30,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            const Text(
+              'More Options',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Audio Settings
+            ListTile(
+              leading: const Icon(
+                Icons.volume_up_outlined,
+                color: Color(0xFF9C27B0),
+                size: 24,
+              ),
+              title: const Text(
+                'Audio Settings',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              subtitle: Text(
+                'Sound and notification settings',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.7),
+                  fontSize: 12,
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AudioSettingsView(),
+                  ),
+                );
+              },
+            ),
+
+            // Voice Coaching
+            ListTile(
+              leading: const Icon(
+                Icons.record_voice_over_outlined,
+                color: Color(0xFF9C27B0),
+                size: 24,
+              ),
+              title: const Text(
+                'Voice Coaching',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              subtitle: Text(
+                'Voice guidance settings',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.7),
+                  fontSize: 12,
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const VoiceCoachingSettingsView(),
+                  ),
+                );
+              },
+            ),
+
+            const SizedBox(height: 20),
+          ],
+        ),
       ),
     );
   }

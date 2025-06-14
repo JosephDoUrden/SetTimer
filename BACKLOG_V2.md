@@ -39,15 +39,6 @@ This backlog covers the development roadmap for Workout Set Timer v2.0, transfor
   - Import validation and error handling
 - [X] **Testing & optimization** (4 days)
 
-#### Sprint 1.3: Template Sharing (1 week)
-- [ ] **QR Code sharing** (2 days)
-  - Generate QR codes for templates
-  - QR code scanning functionality
-- [ ] **Link sharing** (2 days)
-  - Deep link generation
-  - Deep link handling
-- [ ] **Social sharing integration** (1 day)
-
 ### B. Workout History & Analytics 📊
 **Epic Goal**: Track user progress and provide insights
 
@@ -96,31 +87,31 @@ This backlog covers the development roadmap for Workout Set Timer v2.0, transfor
 **Epic Goal**: Rich audio feedback and customization
 
 #### Sprint 3.1: Custom Sound Packs (1 week)
-- [ ] **Audio asset management** (2 days)
+- [X] **Audio asset management** (2 days)
   - Sound pack structure
   - Asset bundling strategy
-- [ ] **Sound pack implementation** (2 days)
+- [X] **Sound pack implementation** (2 days)
   - Gym theme sounds
   - Nature theme sounds
   - Electronic theme sounds
-- [ ] **Audio settings UI** (2 days)
+- [X] **Audio settings UI** (2 days)
   - Sound pack selector
   - Volume controls
-- [ ] **Testing & optimization** (1 day)
+- [X] **Testing & optimization** (1 day)
 
 #### Sprint 3.2: Voice Coaching (1 week)
-- [ ] **Text-to-Speech integration** (2 days)
+- [X] **Text-to-Speech integration** (2 days)
   - flutter_tts implementation
   - Voice customization options
-- [ ] **Coaching script system** (2 days)
+- [X] **Coaching script system** (2 days)
   - Countdown announcements
   - Motivational phrases
   - Progress announcements
-- [ ] **Voice settings** (2 days)
+- [X] **Voice settings** (2 days)
   - Voice selection
   - Speech rate control
   - Enable/disable options
-- [ ] **Testing** (1 day)
+- [X] **Testing** (1 day)
 
 #### Sprint 3.3: Music Integration & Haptics (1 week)
 - [ ] **Music ducking** (2 days)
