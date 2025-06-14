@@ -1,8 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
-import 'package:file_picker/file_picker.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:path_provider/path_provider.dart';
 import '../models/preset_model.dart';
 import 'database_service.dart';
 
@@ -182,49 +178,8 @@ class PresetService {
     return await _databaseService.getCustomPresetCount();
   }
 
-  /// Export preset to JSON file
-  Future<void> exportPresetToFile(PresetModel preset) async {
-    try {
-      final jsonString = jsonEncode(preset.toJson());
-      final directory = await getApplicationDocumentsDirectory();
-      final fileName = '${preset.name.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.json';
-      final file = File('${directory.path}/$fileName');
-
-      await file.writeAsString(jsonString);
-
-      // Share the file
-      await Share.shareXFiles([XFile(file.path)], text: 'Workout preset: ${preset.name}');
-    } catch (e) {
-      throw Exception('Failed to export preset: $e');
-    }
-  }
-
-  /// Import preset from JSON file
-  Future<PresetModel?> importPresetFromFile() async {
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['json'],
-      );
-
-      if (result != null && result.files.single.path != null) {
-        final file = File(result.files.single.path!);
-        final jsonString = await file.readAsString();
-        final preset = importPreset(jsonString);
-
-        // Generate new ID to avoid conflicts
-        final importedPreset = preset.copyWith(
-          id: PresetModel.generateCustomId(),
-          isDefault: false,
-        );
-
-        return importedPreset;
-      }
-      return null;
-    } catch (e) {
-      throw Exception('Failed to import preset: $e');
-    }
-  }
+  // Import/Export functionality will be implemented in future versions
+  // when file_picker and share_plus packages are added back with privacy manifests
 
   /// Export preset to JSON string
   String exportPreset(PresetModel preset) {

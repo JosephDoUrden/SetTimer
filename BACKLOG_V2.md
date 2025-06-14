@@ -113,18 +113,6 @@ This backlog covers the development roadmap for Workout Set Timer v2.0, transfor
   - Enable/disable options
 - [X] **Testing** (1 day)
 
-#### Sprint 3.3: Music Integration & Haptics (1 week)
-- [ ] **Music ducking** (2 days)
-  - Audio session management
-  - Smart volume reduction
-- [ ] **Haptic feedback** (2 days)
-  - Custom vibration patterns
-  - Phase-specific feedback
-- [ ] **Audio mixing** (2 days)
-  - Overlay sounds on music
-  - Audio priority management
-- [ ] **Testing & polish** (1 day)
-
 ## Phase 2: Smart Features (Months 4-6)
 **Priority: MEDIUM | Target: Intelligent User Experience**
 
