@@ -73,6 +73,7 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A0A),
+      resizeToAvoidBottomInset: false,
       body: Consumer<TimerController>(
         builder: (context, controller, child) {
           final timer = controller.timer;
@@ -81,6 +82,33 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
           if (timer.state == TimerState.completed) {
             return _buildCompletionScreen(controller);
           }
+
+          final screenSize = MediaQuery.of(context).size;
+          final isSmallScreen = screenSize.height < 700 || screenSize.width < 400;
+          final isVerySmallScreen = screenSize.height < 600 || screenSize.width < 350;
+
+          // Responsive spacing
+          final headerSpacing = isVerySmallScreen
+              ? 16.0
+              : isSmallScreen
+                  ? 20.0
+                  : 30.0;
+          final progressSpacing = isVerySmallScreen
+              ? 20.0
+              : isSmallScreen
+                  ? 30.0
+                  : 50.0;
+          final bottomSpacing = isVerySmallScreen
+              ? 20.0
+              : isSmallScreen
+                  ? 30.0
+                  : 50.0;
+          final endSpacing = isVerySmallScreen
+              ? 16.0
+              : isSmallScreen
+                  ? 20.0
+                  : 30.0;
+          final sidePadding = isVerySmallScreen ? 16.0 : 20.0;
 
           return Container(
             decoration: const BoxDecoration(
@@ -96,13 +124,13 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
             ),
             child: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.all(20.0),
+                padding: EdgeInsets.symmetric(horizontal: sidePadding, vertical: 12.0),
                 child: Column(
                   children: [
                     // Header with settings
                     _buildHeader(controller),
 
-                    const SizedBox(height: 30),
+                    SizedBox(height: headerSpacing * 0.9),
 
                     // Progress section with animation
                     AnimatedBuilder(
@@ -115,21 +143,21 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
                       },
                     ),
 
-                    const SizedBox(height: 50),
+                    SizedBox(height: progressSpacing * 0.8),
 
-                    // Main timer circle
+                    // Main timer circle - use Expanded to prevent overflow
                     Expanded(
                       child: Center(
                         child: _buildAnimatedTimerCircle(timer),
                       ),
                     ),
 
-                    const SizedBox(height: 50),
+                    SizedBox(height: bottomSpacing * 0.7),
 
                     // Enhanced control buttons
                     _buildEnhancedControlButtons(controller, timer),
 
-                    const SizedBox(height: 30),
+                    SizedBox(height: endSpacing * 0.8),
                   ],
                 ),
               ),
@@ -141,115 +169,197 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
   }
 
   Widget _buildHeader(TimerController controller) {
-    final buttonSize = _getResponsiveSize(context, 44); // Slightly smaller for mobile
+    final buttonSize = _getResponsiveSize(context, 42);
     final screenWidth = MediaQuery.of(context).size.width;
     final isVerySmallScreen = screenWidth < 360;
 
-    return Row(
-      children: [
-        // App title with glow effect - flexible to take available space
-        Expanded(
-          child: Container(
-            padding: EdgeInsets.symmetric(
-                horizontal: _getResponsiveSize(context, isVerySmallScreen ? 12 : 16), vertical: _getResponsiveSize(context, 8)),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF00D4AA), Color(0xFF00B4AA)],
-              ),
-              borderRadius: BorderRadius.circular(_getResponsiveSize(context, 20)),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF00D4AA).withOpacity(0.3),
-                  blurRadius: 15,
-                  spreadRadius: 2,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      child: Row(
+        children: [
+          // Modern app branding - sleek design
+          Expanded(
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                  horizontal: _getResponsiveSize(context, isVerySmallScreen ? 16 : 20), vertical: _getResponsiveSize(context, 12)),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.white.withOpacity(0.12),
+                    Colors.white.withOpacity(0.06),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-              ],
-            ),
-            child: Text(
-              isVerySmallScreen ? 'SetTimer' : 'Workout Set Timer',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: _getResponsiveSize(context, isVerySmallScreen ? 14 : 16),
-                color: Colors.white,
-                letterSpacing: 1,
+                borderRadius: BorderRadius.circular(_getResponsiveSize(context, 18)),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.15),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-              overflow: TextOverflow.ellipsis,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // App icon with glow effect
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF00D4AA), Color(0xFF00B4AA)],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF00D4AA).withOpacity(0.4),
+                          blurRadius: 8,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.timer_outlined,
+                      color: Colors.white,
+                      size: _getResponsiveSize(context, isVerySmallScreen ? 16 : 18),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  // App title with modern typography
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'SetTimer',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: _getResponsiveSize(context, isVerySmallScreen ? 16 : 18),
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                            height: 1.0,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (!isVerySmallScreen) ...[
+                          const SizedBox(height: 1),
+                          Text(
+                            'Workout Timer',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w400,
+                              fontSize: _getResponsiveSize(context, 11),
+                              color: Colors.white.withOpacity(0.7),
+                              letterSpacing: 0.3,
+                              height: 1.0,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
 
-        const SizedBox(width: 12),
+          const SizedBox(width: 12),
 
-        // Action buttons - compact layout
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Presets button
-            _buildHeaderButton(
-              icon: Icons.library_books,
-              color: Colors.white.withOpacity(0.1),
-              iconColor: Colors.white70,
-              size: buttonSize,
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const PresetSelectionView(),
+          // Action buttons - modern glass morphism style
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Presets button
+              _buildModernHeaderButton(
+                icon: Icons.library_books_outlined,
+                color: Colors.white.withOpacity(0.08),
+                iconColor: Colors.white.withOpacity(0.8),
+                size: buttonSize,
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PresetSelectionView(),
+                  ),
                 ),
               ),
-            ),
-            SizedBox(width: isVerySmallScreen ? 8 : 10),
-            // Save Template button
-            _buildHeaderButton(
-              icon: Icons.bookmark_add,
-              color: Colors.blue.withOpacity(0.2),
-              iconColor: Colors.blue,
-              size: buttonSize,
-              onPressed: () => _showSaveTemplateDialog(context, controller),
-              tooltip: 'Save as Template',
-            ),
-            SizedBox(width: isVerySmallScreen ? 8 : 10),
-            // Settings button
-            _buildHeaderButton(
-              icon: Icons.tune,
-              color: Colors.white.withOpacity(0.1),
-              iconColor: Colors.white70,
-              size: buttonSize,
-              onPressed: () => _showSettingsModal(context, controller),
-            ),
-          ],
-        ),
-      ],
+              SizedBox(width: isVerySmallScreen ? 8 : 10),
+
+              // Settings button
+              _buildModernHeaderButton(
+                icon: Icons.tune_outlined,
+                color: Colors.white.withOpacity(0.08),
+                iconColor: Colors.white.withOpacity(0.8),
+                size: buttonSize,
+                onPressed: () => _showSettingsDialog(controller),
+              ),
+              SizedBox(width: isVerySmallScreen ? 8 : 10),
+
+              // Save template button - highlighted
+              _buildModernHeaderButton(
+                icon: Icons.bookmark_add_outlined,
+                color: const Color(0xFF00D4AA).withOpacity(0.15),
+                iconColor: const Color(0xFF00D4AA),
+                size: buttonSize,
+                onPressed: () => _showSaveTemplateDialog(controller),
+                isHighlighted: true,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildHeaderButton({
+  Widget _buildModernHeaderButton({
     required IconData icon,
     required Color color,
     required Color iconColor,
     required double size,
     required VoidCallback onPressed,
-    String? tooltip,
+    bool isHighlighted = false,
   }) {
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        shape: BoxShape.circle,
         color: color,
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: iconColor.withOpacity(0.3),
+          color: isHighlighted ? const Color(0xFF00D4AA).withOpacity(0.3) : Colors.white.withOpacity(0.12),
           width: 1,
         ),
+        boxShadow: [
+          if (isHighlighted)
+            BoxShadow(
+              color: const Color(0xFF00D4AA).withOpacity(0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            )
+          else
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+        ],
       ),
-      child: IconButton(
-        onPressed: onPressed,
-        icon: Icon(
-          icon,
-          color: iconColor,
-          size: _getResponsiveSize(context, 20), // Slightly smaller icon
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onPressed,
+          child: Icon(
+            icon,
+            color: iconColor,
+            size: size * 0.5,
+          ),
         ),
-        tooltip: tooltip,
-        padding: EdgeInsets.zero,
       ),
     );
   }
@@ -401,15 +511,32 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
   }
 
   Widget _buildProgressSection(TimerModel timer) {
+    final isSmallScreen = _isSmallScreen(context);
+    final primaryColor = timer.isInRestPeriod ? const Color(0xFFFF6B35) : const Color(0xFF00D4AA);
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          colors: [
+            primaryColor.withOpacity(0.08),
+            Colors.white.withOpacity(0.03),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         border: Border.all(
-          color: Colors.white.withOpacity(0.1),
+          color: primaryColor.withOpacity(0.2),
           width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: primaryColor.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -418,59 +545,110 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isSmallScreen ? 10 : 14,
+                  vertical: isSmallScreen ? 6 : 8,
+                ),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                  color: (timer.isInRestPeriod ? const Color(0xFFFF6B35) : const Color(0xFF00D4AA)).withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                  gradient: LinearGradient(
+                    colors: [
+                      primaryColor.withOpacity(0.3),
+                      primaryColor.withOpacity(0.2),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: primaryColor.withOpacity(0.5),
+                    width: 1,
+                  ),
                 ),
                 child: Text(
                   '${timer.currentSet}',
                   style: TextStyle(
-                    color: timer.isInRestPeriod ? const Color(0xFFFF6B35) : const Color(0xFF00D4AA),
-                    fontSize: 24,
+                    color: primaryColor,
+                    fontSize: isSmallScreen ? 20 : 24,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               Text(
                 'of',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.5),
-                  fontSize: 16,
+                  color: Colors.white.withOpacity(0.6),
+                  fontSize: isSmallScreen ? 14 : 16,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(width: 8),
-              Text(
-                '${timer.totalSets}',
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+              const SizedBox(width: 10),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isSmallScreen ? 10 : 14,
+                  vertical: isSmallScreen ? 6 : 8,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.white.withOpacity(0.1),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  '${timer.totalSets}',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.9),
+                    fontSize: isSmallScreen ? 20 : 24,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
           ),
 
-          const SizedBox(height: 20),
+          SizedBox(height: isSmallScreen ? 16 : 20),
 
           // Enhanced progress bar
-          Container(
-            height: 8,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(4),
-              color: Colors.white.withOpacity(0.1),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: timer.progress,
-                backgroundColor: Colors.transparent,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  timer.isInRestPeriod ? const Color(0xFFFF6B35) : const Color(0xFF00D4AA),
+          Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Progress',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    '${(timer.progress * 100).toInt()}%',
+                    style: TextStyle(
+                      color: primaryColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Container(
+                height: 6,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(3),
+                  color: Colors.white.withOpacity(0.1),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(3),
+                  child: LinearProgressIndicator(
+                    value: timer.progress,
+                    backgroundColor: Colors.transparent,
+                    valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         ],
       ),
@@ -482,203 +660,327 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
     final primaryColor = isRest ? const Color(0xFFFF6B35) : const Color(0xFF00D4AA);
     final isRunning = timer.state == TimerState.running || timer.state == TimerState.resting;
 
-    // Calculate responsive circle size based on screen constraints
-    // Use LayoutBuilder to get the actual available space in the parent Expanded widget
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Calculate the maximum possible size while maintaining a circular shape
-        final maxSize = constraints.maxWidth < constraints.maxHeight
-            ? constraints.maxWidth * 0.9 // 90% of available width
-            : constraints.maxHeight * 0.9; // 90% of available height
+        final screenSize = MediaQuery.of(context).size;
+        final isSmallScreen = screenSize.height < 700 || screenSize.width < 400;
+        final isVerySmallScreen = screenSize.height < 600 || screenSize.width < 350;
 
-        // Apply minimum and maximum constraints to avoid too small or too large circles
-        final circleSize = maxSize.clamp(240.0, 320.0);
+        // Calculate optimal circle size based on available space and screen characteristics
+        final availableWidth = constraints.maxWidth;
+        final availableHeight = constraints.maxHeight;
+        final minDimension = availableWidth < availableHeight ? availableWidth : availableHeight;
 
-        return AnimatedBuilder(
-          animation: isRunning ? _pulseAnimation : _progressController,
-          builder: (context, child) {
-            return Transform.scale(
-              scale: isRunning ? _pulseAnimation.value : 1.0,
-              child: Container(
-                width: circleSize,
-                height: circleSize, // Equal height and width for perfect circle
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      primaryColor.withOpacity(0.15),
-                      primaryColor.withOpacity(0.05),
-                      Colors.transparent,
-                    ],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: primaryColor.withOpacity(0.3),
-                      blurRadius: 30,
-                      spreadRadius: 5,
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
-                    // Outer ring
-                    Positioned.fill(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: primaryColor.withOpacity(0.3),
-                            width: 2,
+        // Calculate max allowed size first
+        final maxAllowedSize = minDimension * 0.9;
+        const absoluteMinSize = 80.0; // Reduced absolute minimum
+
+        // Ensure we have a valid range for clamping
+        final effectiveMinSize = absoluteMinSize > maxAllowedSize ? maxAllowedSize * 0.8 : absoluteMinSize;
+
+        // More conservative sizing to prevent overflow
+        double circleSize;
+        if (isVerySmallScreen) {
+          circleSize = (minDimension * 0.7);
+        } else if (isSmallScreen) {
+          circleSize = (minDimension * 0.75);
+        } else {
+          circleSize = (minDimension * 0.8);
+        }
+
+        // Apply safe clamping with valid min/max range
+        circleSize = circleSize.clamp(effectiveMinSize, maxAllowedSize);
+
+        // Calculate progress
+        final totalDuration = timer.isInRestPeriod ? timer.restDurationSeconds : timer.setDurationSeconds;
+        final elapsed = totalDuration - timer.remainingSeconds;
+        final progressValue = totalDuration > 0 ? elapsed / totalDuration : 0.0;
+
+        // Responsive font sizes based on circle size
+        final timerFontSize = (circleSize * 0.15).clamp(32.0, 52.0);
+        final phaseFontSize = (circleSize * 0.05).clamp(11.0, 16.0);
+        final percentageFontSize = (circleSize * 0.055).clamp(12.0, 18.0);
+
+        return Center(
+          child: AnimatedBuilder(
+            animation: isRunning ? _pulseAnimation : _progressController,
+            builder: (context, child) {
+              return Transform.scale(
+                scale: isRunning ? _pulseAnimation.value : 1.0,
+                child: SizedBox(
+                  width: circleSize,
+                  height: circleSize,
+                  child: Stack(
+                    children: [
+                      // Outer glow effect
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                primaryColor.withOpacity(0.2),
+                                primaryColor.withOpacity(0.1),
+                                primaryColor.withOpacity(0.05),
+                                Colors.transparent,
+                              ],
+                              stops: const [0.0, 0.3, 0.6, 1.0],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: primaryColor.withOpacity(0.4),
+                                blurRadius: circleSize * 0.12,
+                                spreadRadius: 0,
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                    ),
 
-                    // Progress ring
-                    Positioned.fill(
-                      child: Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: CircularProgressIndicator(
-                          value: timer.isInRestPeriod
-                              ? (timer.restDurationSeconds - timer.remainingSeconds) / timer.restDurationSeconds
-                              : (timer.setDurationSeconds - timer.remainingSeconds) / timer.setDurationSeconds,
-                          strokeWidth: 12,
-                          backgroundColor: Colors.white.withOpacity(0.1),
-                          valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
-                          strokeCap: StrokeCap.round,
-                        ),
-                      ),
-                    ),
-
-                    // Center content
-                    Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // Phase indicator with glow
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(25),
-                              color: primaryColor.withOpacity(0.2),
-                              border: Border.all(
-                                color: primaryColor.withOpacity(0.6),
-                                width: 2,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: primaryColor.withOpacity(0.4),
-                                  blurRadius: 15,
-                                  spreadRadius: 2,
-                                ),
+                      // Background circle
+                      Positioned.fill(
+                        child: Container(
+                          margin: EdgeInsets.all(circleSize * 0.05),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                Colors.black.withOpacity(0.6),
+                                Colors.black.withOpacity(0.8),
                               ],
                             ),
-                            child: Text(
-                              timer.isInRestPeriod ? 'REST' : 'WORK',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: primaryColor,
-                                letterSpacing: 2,
-                              ),
+                            border: Border.all(
+                              color: primaryColor.withOpacity(0.3),
+                              width: 2,
                             ),
                           ),
+                        ),
+                      ),
 
-                          const SizedBox(height: 30),
-
-                          // Time display with enhanced styling
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15),
-                              color: Colors.black.withOpacity(0.3),
-                            ),
-                            child: Text(
-                              _formatTime(timer.remainingSeconds),
-                              style: const TextStyle(
-                                fontSize: 56,
-                                fontWeight: FontWeight.w200,
-                                color: Colors.white,
-                                height: 1,
-                                fontFeatures: [FontFeature.tabularFigures()],
-                              ),
-                            ),
+                      // Progress ring
+                      Positioned.fill(
+                        child: Padding(
+                          padding: EdgeInsets.all(circleSize * 0.05),
+                          child: CircularProgressIndicator(
+                            value: progressValue,
+                            strokeWidth: (circleSize * 0.025).clamp(4.0, 8.0),
+                            backgroundColor: Colors.white.withOpacity(0.1),
+                            valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                            strokeCap: StrokeCap.round,
                           ),
+                        ),
+                      ),
 
-                          const SizedBox(height: 16),
-
-                          // State indicator
-                          if (timer.state != TimerState.idle)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: Colors.white.withOpacity(0.1),
-                              ),
-                              child: Text(
-                                _getStateText(timer.state),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.white.withOpacity(0.8),
-                                  letterSpacing: 1,
-                                  fontWeight: FontWeight.w500,
+                      // Inner content
+                      Positioned.fill(
+                        child: Container(
+                          margin: EdgeInsets.all(circleSize * 0.15),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // Phase indicator
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: circleSize * 0.08,
+                                  vertical: circleSize * 0.025,
+                                ),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20),
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      primaryColor,
+                                      primaryColor.withOpacity(0.8),
+                                    ],
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: primaryColor.withOpacity(0.5),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Text(
+                                  timer.isInRestPeriod ? 'REST' : 'WORK',
+                                  style: TextStyle(
+                                    fontSize: phaseFontSize,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    letterSpacing: 1.5,
+                                  ),
                                 ),
                               ),
-                            ),
-                        ],
+
+                              SizedBox(height: circleSize * 0.08),
+
+                              // Time display
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: circleSize * 0.06,
+                                  vertical: circleSize * 0.03,
+                                ),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: Colors.black.withOpacity(0.5),
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.2),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Text(
+                                  _formatTime(timer.remainingSeconds),
+                                  style: TextStyle(
+                                    fontSize: timerFontSize,
+                                    fontWeight: FontWeight.w300,
+                                    color: Colors.white,
+                                    height: 1.0,
+                                    fontFeatures: const [FontFeature.tabularFigures()],
+                                  ),
+                                ),
+                              ),
+
+                              SizedBox(height: circleSize * 0.05),
+
+                              // Progress percentage
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: circleSize * 0.04,
+                                  vertical: circleSize * 0.015,
+                                ),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(16),
+                                  color: primaryColor.withOpacity(0.2),
+                                ),
+                                child: Text(
+                                  '${(progressValue * 100).toInt()}%',
+                                  style: TextStyle(
+                                    fontSize: percentageFontSize,
+                                    fontWeight: FontWeight.w600,
+                                    color: primaryColor,
+                                  ),
+                                ),
+                              ),
+
+                              // State indicator (only show if not idle)
+                              if (timer.state != TimerState.idle) ...[
+                                SizedBox(height: circleSize * 0.03),
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: circleSize * 0.04,
+                                    vertical: circleSize * 0.01,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    color: Colors.white.withOpacity(0.1),
+                                  ),
+                                  child: Text(
+                                    _getStateText(timer.state),
+                                    style: TextStyle(
+                                      fontSize: (circleSize * 0.035).clamp(9.0, 11.0),
+                                      color: Colors.white.withOpacity(0.7),
+                                      letterSpacing: 0.5,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         );
       },
     );
   }
 
   Widget _buildEnhancedControlButtons(TimerController controller, TimerModel timer) {
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.height < 700 || screenSize.width < 400;
+    final isVerySmallScreen = screenSize.height < 600 || screenSize.width < 350;
+
+    // Responsive button sizes
+    final mainButtonSize = isVerySmallScreen
+        ? 64.0
+        : isSmallScreen
+            ? 72.0
+            : 80.0;
+    final sideButtonSize = isVerySmallScreen
+        ? 48.0
+        : isSmallScreen
+            ? 56.0
+            : 64.0;
+    final containerPadding = isVerySmallScreen
+        ? 12.0
+        : isSmallScreen
+            ? 16.0
+            : 20.0;
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(containerPadding),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(24),
+        gradient: LinearGradient(
+          colors: [
+            Colors.white.withOpacity(0.08),
+            Colors.white.withOpacity(0.04),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         border: Border.all(
-          color: Colors.white.withOpacity(0.1),
+          color: Colors.white.withOpacity(0.12),
           width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           // Reset button
           _buildControlButton(
-            icon: Icons.refresh,
+            icon: Icons.refresh_rounded,
             onPressed: controller.resetTimer,
-            color: Colors.white.withOpacity(0.3),
-            size: 60,
+            color: Colors.white.withOpacity(0.2),
+            size: sideButtonSize,
             label: 'Reset',
+            isEnabled: timer.state != TimerState.idle,
+            isSmallScreen: isVerySmallScreen,
           ),
 
           // Main play/pause button
           _buildControlButton(
-            icon: timer.state == TimerState.running || timer.state == TimerState.resting ? Icons.pause : Icons.play_arrow,
+            icon: timer.state == TimerState.running || timer.state == TimerState.resting ? Icons.pause_rounded : Icons.play_arrow_rounded,
             onPressed:
                 timer.state == TimerState.running || timer.state == TimerState.resting ? controller.pauseTimer : controller.startTimer,
             color: timer.isInRestPeriod ? const Color(0xFFFF6B35) : const Color(0xFF00D4AA),
-            size: 80,
+            size: mainButtonSize,
             isMain: true,
             label: timer.state == TimerState.running || timer.state == TimerState.resting ? 'Pause' : 'Start',
+            isEnabled: true,
+            isSmallScreen: isVerySmallScreen,
           ),
 
           // Settings button
           _buildControlButton(
-            icon: Icons.tune,
+            icon: Icons.tune_rounded,
             onPressed: () => _showSettingsModal(context, controller),
-            color: Colors.white.withOpacity(0.3),
-            size: 60,
+            color: Colors.white.withOpacity(0.2),
+            size: sideButtonSize,
             label: 'Settings',
+            isEnabled: timer.state == TimerState.idle || timer.state == TimerState.paused,
+            isSmallScreen: isVerySmallScreen,
           ),
         ],
       ),
@@ -692,58 +994,60 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
     required double size,
     required String label,
     bool isMain = false,
+    bool isEnabled = true,
+    bool isSmallScreen = false,
   }) {
+    final buttonColor = isEnabled ? color : Colors.grey.withOpacity(0.3);
+    final iconColor = isEnabled ? Colors.white : Colors.white.withOpacity(0.5);
+    final labelFontSize = isSmallScreen ? 10.0 : 12.0;
+
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: size,
           height: size,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: isMain
+            gradient: isMain && isEnabled
                 ? RadialGradient(
                     colors: [
-                      color,
-                      color.withOpacity(0.8),
+                      buttonColor,
+                      buttonColor.withOpacity(0.8),
                     ],
                   )
                 : null,
-            color: isMain ? null : color,
-            boxShadow: isMain
+            color: isMain ? null : buttonColor,
+            boxShadow: isEnabled
                 ? [
                     BoxShadow(
-                      color: color.withOpacity(0.4),
-                      blurRadius: 25,
-                      spreadRadius: 3,
+                      color: isMain ? buttonColor.withOpacity(0.5) : Colors.black.withOpacity(0.3),
+                      blurRadius: isMain ? 20 : 10,
+                      spreadRadius: isMain ? 2 : 1,
+                      offset: const Offset(0, 3),
                     ),
                   ]
-                : [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 10,
-                      spreadRadius: 1,
-                    ),
-                  ],
+                : null,
           ),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
               borderRadius: BorderRadius.circular(size / 2),
-              onTap: onPressed,
+              onTap: isEnabled ? onPressed : null,
               child: Icon(
                 icon,
-                color: Colors.white,
-                size: size * 0.4,
+                color: iconColor,
+                size: size * (isMain ? 0.45 : 0.4),
               ),
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: isSmallScreen ? 6 : 8),
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.7),
-            fontSize: 12,
+            color: isEnabled ? Colors.white.withOpacity(0.8) : Colors.white.withOpacity(0.4),
+            fontSize: labelFontSize,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -789,7 +1093,7 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
     );
   }
 
-  void _showSaveTemplateDialog(BuildContext context, TimerController controller) {
+  void _showSaveTemplateDialog(TimerController controller) {
     showDialog(
       context: context,
       builder: (context) => SaveTemplateDialog(
@@ -808,6 +1112,18 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
           );
         },
       ),
+    );
+  }
+
+  void _showSettingsDialog(TimerController controller) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1A1A1A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => _SettingsModal(controller: controller),
+      isScrollControlled: true,
     );
   }
 }

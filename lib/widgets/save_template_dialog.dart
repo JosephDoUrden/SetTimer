@@ -113,260 +113,265 @@ class _SaveTemplateDialogState extends State<SaveTemplateDialog> {
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
     final isSmallScreen = screenSize.width < 400;
-    final maxWidth = isSmallScreen ? screenSize.width * 0.95 : 400.0;
+    final isKeyboardVisible = keyboardHeight > 0;
+    final isVerySmallScreen = screenSize.height < 700;
 
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: EdgeInsets.symmetric(
-        horizontal: isSmallScreen ? 16 : 32,
-        vertical: 24,
+        horizontal: isSmallScreen ? 12 : 20,
+        vertical: isKeyboardVisible ? 8 : 24,
       ),
-      child: Container(
-        width: maxWidth,
+      child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxHeight: screenSize.height * 0.85,
+          maxWidth: isSmallScreen ? screenSize.width * 0.95 : 420,
+          maxHeight: isKeyboardVisible
+              ? screenSize.height - keyboardHeight - 60 // Conservative space for keyboard
+              : screenSize.height * 0.85,
         ),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1A1A1A),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: const Color(0xFF00D4AA).withOpacity(0.3),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF00D4AA).withOpacity(0.1),
-              blurRadius: 20,
-              spreadRadius: 5,
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A1A1A),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: const Color(0xFF00D4AA).withOpacity(0.3),
+              width: 1,
             ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    const Color(0xFF00D4AA).withOpacity(0.1),
-                    Colors.transparent,
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
-                ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF00D4AA).withOpacity(0.1),
+                blurRadius: 20,
+                spreadRadius: 5,
               ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF00D4AA).withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.bookmark_add,
-                      color: Color(0xFF00D4AA),
-                      size: 24,
-                    ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header - Fixed height
+              Container(
+                padding: EdgeInsets.all(isKeyboardVisible ? 12 : 16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFF00D4AA).withOpacity(0.1),
+                      Colors.transparent,
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
                   ),
-                  const SizedBox(width: 16),
-                  const Expanded(
-                    child: Text(
-                      'Save as Template',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF00D4AA).withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.bookmark_add,
+                        color: Color(0xFF00D4AA),
+                        size: 18,
                       ),
                     ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    icon: const Icon(
-                      Icons.close,
-                      color: Colors.white70,
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Text(
+                        'Save Template',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      icon: const Icon(
+                        Icons.close,
+                        color: Colors.white70,
+                      ),
+                      iconSize: 18,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 28,
+                        minHeight: 28,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            // Content
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Current Settings Preview
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              const Color(0xFF00D4AA).withOpacity(0.1),
-                              const Color(0xFF00D4AA).withOpacity(0.05),
+              // Scrollable Content - Flexible to take remaining space
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.all(isKeyboardVisible ? 12 : 16),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Current Settings Preview - Compact
+                        Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(isKeyboardVisible ? 10 : 12),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                const Color(0xFF00D4AA).withOpacity(0.1),
+                                const Color(0xFF00D4AA).withOpacity(0.05),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: const Color(0xFF00D4AA).withOpacity(0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.info_outline,
+                                    color: Color(0xFF00D4AA),
+                                    size: 14,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Current Settings',
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.9),
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: isKeyboardVisible ? 4 : 6),
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 4,
+                                children: [
+                                  _buildSettingChip('${widget.currentSettings.totalSets} sets', Icons.repeat),
+                                  _buildSettingChip('${widget.currentSettings.setDurationSeconds}s work', Icons.play_arrow),
+                                  _buildSettingChip('${widget.currentSettings.restDurationSeconds}s rest', Icons.pause),
+                                  _buildSettingChip('Rest after ${widget.currentSettings.restAfterSets}', Icons.schedule),
+                                ],
+                              ),
                             ],
                           ),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: const Color(0xFF00D4AA).withOpacity(0.3),
-                            width: 1,
-                          ),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.info_outline,
-                                  color: Color(0xFF00D4AA),
-                                  size: 18,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Current Workout Settings',
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.9),
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
+                        SizedBox(height: isKeyboardVisible ? 12 : 16),
+
+                        // Template Name
+                        _buildInputSection(
+                          'Template Name',
+                          TextFormField(
+                            controller: _nameController,
+                            style: const TextStyle(color: Colors.white, fontSize: 14),
+                            decoration: _buildInputDecoration(
+                              'e.g., My Custom HIIT',
+                              Icons.edit,
                             ),
-                            const SizedBox(height: 12),
-                            Wrap(
-                              spacing: 12,
-                              runSpacing: 8,
-                              children: [
-                                _buildSettingChip('${widget.currentSettings.totalSets} sets', Icons.repeat),
-                                _buildSettingChip('${widget.currentSettings.setDurationSeconds}s work', Icons.play_arrow),
-                                _buildSettingChip('${widget.currentSettings.restDurationSeconds}s rest', Icons.pause),
-                                _buildSettingChip('Rest after ${widget.currentSettings.restAfterSets}', Icons.schedule),
-                              ],
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Please enter a template name';
+                              }
+                              if (value.trim().length < 3) {
+                                return 'Name must be at least 3 characters';
+                              }
+                              if (value.trim().length > 50) {
+                                return 'Name must be less than 50 characters';
+                              }
+                              return null;
+                            },
+                            onChanged: (value) {
+                              if (value.trim().isNotEmpty) {
+                                _checkNameConflict(value.trim());
+                              }
+                            },
+                            textInputAction: TextInputAction.next,
+                          ),
+                        ),
+                        SizedBox(height: isKeyboardVisible ? 10 : 14),
+
+                        // Description - Always single line when keyboard is visible
+                        _buildInputSection(
+                          'Description',
+                          TextFormField(
+                            controller: _descriptionController,
+                            style: const TextStyle(color: Colors.white, fontSize: 14),
+                            maxLines: isKeyboardVisible ? 1 : 2,
+                            decoration: _buildInputDecoration(
+                              'Describe your workout routine...',
+                              Icons.description,
                             ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Template Name
-                      _buildInputSection(
-                        'Template Name',
-                        TextFormField(
-                          controller: _nameController,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: _buildInputDecoration(
-                            'e.g., My Custom HIIT',
-                            Icons.edit,
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Please enter a description';
+                              }
+                              if (value.trim().length < 10) {
+                                return 'Description must be at least 10 characters';
+                              }
+                              if (value.trim().length > 200) {
+                                return 'Description must be less than 200 characters';
+                              }
+                              return null;
+                            },
+                            textInputAction: TextInputAction.done,
                           ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Please enter a template name';
-                            }
-                            if (value.trim().length < 3) {
-                              return 'Name must be at least 3 characters';
-                            }
-                            if (value.trim().length > 50) {
-                              return 'Name must be less than 50 characters';
-                            }
-                            return null;
-                          },
-                          onChanged: (value) {
-                            if (value.trim().isNotEmpty) {
-                              _checkNameConflict(value.trim());
-                            }
-                          },
                         ),
-                      ),
-                      const SizedBox(height: 20),
+                        SizedBox(height: isKeyboardVisible ? 10 : 14),
 
-                      // Description
-                      _buildInputSection(
-                        'Description',
-                        TextFormField(
-                          controller: _descriptionController,
-                          style: const TextStyle(color: Colors.white),
-                          maxLines: 3,
-                          decoration: _buildInputDecoration(
-                            'Describe your workout routine...',
-                            Icons.description,
-                          ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Please enter a description';
-                            }
-                            if (value.trim().length < 10) {
-                              return 'Description must be at least 10 characters';
-                            }
-                            if (value.trim().length > 200) {
-                              return 'Description must be less than 200 characters';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Category and Icon Row
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Category Selection
-                          Expanded(
-                            flex: 2,
-                            child: _buildInputSection(
-                              'Category',
-                              DropdownButtonFormField<String>(
-                                value: _selectedCategory,
-                                style: const TextStyle(color: Colors.white),
-                                dropdownColor: const Color(0xFF2A2A2A),
-                                decoration: _buildInputDecoration(
-                                  'Select category',
-                                  Icons.category,
-                                ),
-                                items: _predefinedCategories.map((category) {
-                                  return DropdownMenuItem(
-                                    value: category,
-                                    child: Text(category),
-                                  );
-                                }).toList(),
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedCategory = value!;
-                                  });
-                                },
-                              ),
+                        // Category Selection
+                        _buildInputSection(
+                          'Category',
+                          DropdownButtonFormField<String>(
+                            value: _selectedCategory,
+                            style: const TextStyle(color: Colors.white, fontSize: 14),
+                            dropdownColor: const Color(0xFF2A2A2A),
+                            decoration: _buildInputDecoration(
+                              'Select category',
+                              Icons.category,
                             ),
+                            items: _predefinedCategories.map((category) {
+                              return DropdownMenuItem(
+                                value: category,
+                                child: Text(category),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedCategory = value!;
+                              });
+                            },
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
+                        ),
 
-                      // Icon Selection
-                      _buildInputSection(
-                        'Choose Icon',
-                        Column(
-                          children: [
+                        // Icon Selection - Only show when keyboard is not visible or on larger screens
+                        if (!isKeyboardVisible || !isVerySmallScreen) ...[
+                          SizedBox(height: isKeyboardVisible ? 10 : 14),
+                          _buildInputSection(
+                            'Choose Icon',
                             GridView.builder(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: isSmallScreen ? 4 : 5,
-                                crossAxisSpacing: 8,
-                                mainAxisSpacing: 8,
-                                childAspectRatio: 1,
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 4,
+                                crossAxisSpacing: 6,
+                                mainAxisSpacing: 6,
+                                childAspectRatio: 1.1,
                               ),
                               itemCount: _iconOptions.length,
                               itemBuilder: (context, index) {
@@ -386,7 +391,7 @@ class _SaveTemplateDialogState extends State<SaveTemplateDialog> {
                                             )
                                           : null,
                                       color: isSelected ? null : Colors.white.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(8),
                                       border: Border.all(
                                         color: isSelected ? const Color(0xFF00D4AA) : Colors.white.withOpacity(0.2),
                                         width: isSelected ? 2 : 1,
@@ -398,13 +403,13 @@ class _SaveTemplateDialogState extends State<SaveTemplateDialog> {
                                         Icon(
                                           _getIconData(iconData['name']!),
                                           color: isSelected ? Colors.white : Colors.white70,
-                                          size: isSmallScreen ? 20 : 24,
+                                          size: 16,
                                         ),
-                                        const SizedBox(height: 4),
+                                        const SizedBox(height: 2),
                                         Text(
                                           iconData['label']!,
                                           style: TextStyle(
-                                            fontSize: isSmallScreen ? 8 : 10,
+                                            fontSize: 7,
                                             color: isSelected ? Colors.white : Colors.white70,
                                             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                                           ),
@@ -418,86 +423,86 @@ class _SaveTemplateDialogState extends State<SaveTemplateDialog> {
                                 );
                               },
                             ),
-                          ],
-                        ),
-                      ),
-                    ],
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            // Action Buttons
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(
-                    color: Colors.white.withOpacity(0.1),
-                    width: 1,
+              // Action Buttons - Fixed height at bottom
+              Container(
+                padding: EdgeInsets.all(isKeyboardVisible ? 12 : 16),
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(
+                      color: Colors.white.withOpacity(0.1),
+                      width: 1,
+                    ),
                   ),
                 ),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _isLoading ? null : () => Navigator.of(context).pop(false),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white70,
-                        side: BorderSide(color: Colors.white.withOpacity(0.3)),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: _isLoading ? null : () => Navigator.of(context).pop(false),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white70,
+                          side: BorderSide(color: Colors.white.withOpacity(0.3)),
+                          padding: EdgeInsets.symmetric(vertical: isKeyboardVisible ? 10 : 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
-                      ),
-                      child: const Text(
-                        'Cancel',
-                        style: TextStyle(fontWeight: FontWeight.w600),
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _saveTemplate,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF00D4AA),
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      flex: 2,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _saveTemplate,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF00D4AA),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: EdgeInsets.symmetric(vertical: isKeyboardVisible ? 10 : 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          shadowColor: const Color(0xFF00D4AA).withOpacity(0.3),
                         ),
-                        shadowColor: const Color(0xFF00D4AA).withOpacity(0.3),
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.save, size: 18),
-                                SizedBox(width: 8),
-                                Text(
-                                  'Save Template',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                 ),
-                              ],
-                            ),
+                              )
+                            : const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.save, size: 14),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'Save Template',
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                  ),
+                                ],
+                              ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -505,25 +510,25 @@ class _SaveTemplateDialogState extends State<SaveTemplateDialog> {
 
   Widget _buildSettingChip(String text, IconData icon) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             icon,
-            size: 14,
+            size: 12,
             color: Colors.white70,
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 3),
           Text(
             text,
             style: TextStyle(
               color: Colors.white.withOpacity(0.8),
-              fontSize: 12,
+              fontSize: 10,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -540,11 +545,11 @@ class _SaveTemplateDialogState extends State<SaveTemplateDialog> {
           label,
           style: TextStyle(
             color: Colors.white.withOpacity(0.9),
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         child,
       ],
     );
@@ -555,51 +560,52 @@ class _SaveTemplateDialogState extends State<SaveTemplateDialog> {
       hintText: hint,
       hintStyle: TextStyle(
         color: Colors.white.withOpacity(0.5),
-        fontSize: 14,
+        fontSize: 13,
       ),
       prefixIcon: Icon(
         icon,
         color: const Color(0xFF00D4AA),
-        size: 20,
+        size: 18,
       ),
       filled: true,
       fillColor: Colors.white.withOpacity(0.05),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         borderSide: BorderSide(
           color: Colors.white.withOpacity(0.2),
           width: 1,
         ),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         borderSide: BorderSide(
           color: Colors.white.withOpacity(0.2),
           width: 1,
         ),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         borderSide: const BorderSide(
           color: Color(0xFF00D4AA),
           width: 2,
         ),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         borderSide: const BorderSide(
           color: Colors.red,
           width: 1,
         ),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         borderSide: const BorderSide(
           color: Colors.red,
           width: 2,
         ),
       ),
-      contentPadding: const EdgeInsets.all(16),
+      contentPadding: const EdgeInsets.all(14),
+      isDense: true,
     );
   }
 
