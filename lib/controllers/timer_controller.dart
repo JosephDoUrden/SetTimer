@@ -3,8 +3,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/timer_model.dart';
+import '../models/preset_model.dart';
 import '../services/audio_service.dart';
 import '../services/background_service.dart';
+import '../services/voice_coaching_service.dart';
 
 class TimerController extends ChangeNotifier with WidgetsBindingObserver {
   TimerModel _timer = TimerModel(
@@ -17,10 +19,19 @@ class TimerController extends ChangeNotifier with WidgetsBindingObserver {
   Timer? _countdownTimer;
   final AudioService _audioService = AudioService();
   final BackgroundService _backgroundService = BackgroundService();
+  final VoiceCoachingService _voiceCoachingService = VoiceCoachingService();
 
   DateTime? _pausedAt;
 
   TimerModel get timer => _timer;
+  AudioService get audioService => _audioService;
+  VoiceCoachingService get voiceCoachingService => _voiceCoachingService;
+
+  // Initialize the timer controller
+  Future<void> initialize() async {
+    await _audioService.initialize();
+    await _voiceCoachingService.initialize();
+  }
 
   void updateTimerSettings({
     int? totalSets,
@@ -53,6 +64,7 @@ class TimerController extends ChangeNotifier with WidgetsBindingObserver {
     if (_timer.state == TimerState.idle || _timer.state == TimerState.paused) {
       _timer = _timer.copyWith(state: TimerState.running);
       _audioService.playSetStart();
+      _voiceCoachingService.announceSetStart();
       _backgroundService.enableBackgroundMode();
 
       // Register for app lifecycle events
@@ -91,6 +103,12 @@ class TimerController extends ChangeNotifier with WidgetsBindingObserver {
   void _startCountdown() {
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_timer.remainingSeconds > 0) {
+        // Play countdown sound for last 3 seconds
+        if (_timer.remainingSeconds <= 3 && _timer.remainingSeconds > 0) {
+          _audioService.playCountdown();
+          _voiceCoachingService.announceCountdown(_timer.remainingSeconds);
+        }
+
         _timer = _timer.copyWith(remainingSeconds: _timer.remainingSeconds - 1);
         notifyListeners();
       } else {
@@ -109,6 +127,10 @@ class TimerController extends ChangeNotifier with WidgetsBindingObserver {
 
   void _handleSetComplete() {
     _audioService.playSetEnd();
+    _voiceCoachingService.announceSetEnd();
+
+    // Announce progress
+    _voiceCoachingService.announceProgress(_timer.currentSet, _timer.totalSets);
 
     // Mevcut set tamamlandı, şimdi kontrol et
     if (_timer.currentSet >= _timer.totalSets) {
@@ -122,6 +144,7 @@ class TimerController extends ChangeNotifier with WidgetsBindingObserver {
 
   void _handleRestComplete() {
     _audioService.playRestEnd();
+    _voiceCoachingService.announceRestEnd();
     _startNextSet();
   }
 
@@ -132,6 +155,7 @@ class TimerController extends ChangeNotifier with WidgetsBindingObserver {
       remainingSeconds: _timer.restDurationSeconds,
     );
     _audioService.playRestStart();
+    _voiceCoachingService.announceRestStart();
     notifyListeners();
   }
 
@@ -143,6 +167,7 @@ class TimerController extends ChangeNotifier with WidgetsBindingObserver {
       remainingSeconds: _timer.setDurationSeconds,
     );
     _audioService.playSetStart();
+    _voiceCoachingService.announceSetStart();
     notifyListeners();
   }
 
@@ -155,6 +180,7 @@ class TimerController extends ChangeNotifier with WidgetsBindingObserver {
 
     _timer = _timer.copyWith(state: TimerState.completed);
     _audioService.playWorkoutComplete();
+    _voiceCoachingService.announceWorkoutComplete();
     _backgroundService.disableBackgroundMode();
 
     // Provide haptic feedback for workout completion
@@ -232,6 +258,25 @@ class TimerController extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
+  /// Get current timer settings as a PresetModel for saving as template
+  PresetModel getCurrentSettingsAsPreset({
+    required String name,
+    required String description,
+    String category = 'Custom',
+    String? iconName,
+  }) {
+    return PresetModel.createCustom(
+      name: name,
+      description: description,
+      totalSets: _timer.totalSets,
+      setDurationSeconds: _timer.setDurationSeconds,
+      restDurationSeconds: _timer.restDurationSeconds,
+      restAfterSets: _timer.restAfterSets,
+      category: category,
+      iconName: iconName,
+    );
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
@@ -253,6 +298,7 @@ class TimerController extends ChangeNotifier with WidgetsBindingObserver {
   void dispose() {
     _countdownTimer?.cancel();
     _audioService.stopAllSounds();
+    _voiceCoachingService.stop();
     _backgroundService.disableBackgroundMode();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
