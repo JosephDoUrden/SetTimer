@@ -3,10 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../controllers/timer_controller.dart';
 import '../models/timer_model.dart';
+import '../services/achievement_service.dart';
 import '../widgets/save_template_dialog.dart';
+import '../widgets/achievement_notification_widget.dart';
 import 'preset_selection_view.dart';
 import 'audio_settings_view.dart';
 import 'voice_coaching_settings_view.dart';
+import 'workout_history_view.dart';
 
 class TimerView extends StatefulWidget {
   const TimerView({super.key});
@@ -20,6 +23,7 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
   late AnimationController _progressController;
   late Animation<double> _pulseAnimation;
   late Animation<double> _scaleAnimation;
+  final AchievementService _achievementService = AchievementService();
 
   @override
   void initState() {
@@ -51,6 +55,13 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
 
     _pulseController.repeat(reverse: true);
     _progressController.forward();
+
+    // Listen for achievement unlocks
+    _achievementService.achievementUnlocked.listen((achievement) {
+      if (mounted) {
+        AchievementNotificationOverlay.show(context, achievement);
+      }
+    });
   }
 
   @override
@@ -132,7 +143,7 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
                     // Header with settings
                     _buildHeader(controller),
 
-                    SizedBox(height: headerSpacing * 0.9),
+                    SizedBox(height: headerSpacing * 0.8),
 
                     // Progress section with animation
                     AnimatedBuilder(
@@ -175,66 +186,64 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
     final isVerySmallScreen = screenWidth < 360;
     final isSmallScreen = screenWidth < 400;
 
-    // Daha küçük buton boyutları ve daha az buton gösterimi
-    final buttonSize = isVerySmallScreen ? 36.0 : (isSmallScreen ? 38.0 : 42.0);
-
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       child: Row(
         children: [
-          // Modern app branding - daha compact tasarım
+          // Modern app branding - cleaner design
           Expanded(
             child: Container(
-              padding: EdgeInsets.symmetric(horizontal: isVerySmallScreen ? 12 : 16, vertical: isVerySmallScreen ? 8 : 10),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.white.withOpacity(0.12),
-                    Colors.white.withOpacity(0.06),
+                    Colors.white.withOpacity(0.08),
+                    Colors.white.withOpacity(0.03),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.15),
+                  color: Colors.white.withOpacity(0.1),
                   width: 1,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 8,
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),
                 ],
               ),
               child: Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // App icon with glow effect - daha küçük
+                  // App icon with modern glow
                   Container(
-                    padding: const EdgeInsets.all(4),
+                    padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: const LinearGradient(
                         colors: [Color(0xFF00D4AA), Color(0xFF00B4AA)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF00D4AA).withOpacity(0.4),
-                          blurRadius: 6,
-                          spreadRadius: 1,
+                          color: const Color(0xFF00D4AA).withOpacity(0.3),
+                          blurRadius: 8,
+                          spreadRadius: 0,
                         ),
                       ],
                     ),
                     child: Icon(
                       Icons.timer_outlined,
                       color: Colors.white,
-                      size: isVerySmallScreen ? 14 : 16,
+                      size: isVerySmallScreen ? 16 : 18,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  // App title - daha esnek
+                  const SizedBox(width: 12),
+                  // App title
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -243,117 +252,146 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
                         Text(
                           'SetTimer',
                           style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: isVerySmallScreen ? 14 : 16,
+                            fontWeight: FontWeight.w600,
+                            fontSize: isVerySmallScreen ? 16 : 18,
                             color: Colors.white,
-                            letterSpacing: 0.3,
+                            letterSpacing: 0.2,
                             height: 1.0,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.visible,
                         ),
                         if (!isVerySmallScreen) ...[
-                          const SizedBox(height: 1),
-                          Text(
-                            'Workout Timer',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w400,
-                              fontSize: 10,
-                              color: Colors.white.withOpacity(0.7),
-                              letterSpacing: 0.2,
-                              height: 1.0,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          const SizedBox(height: 2),
+                          Consumer<TimerController>(
+                            builder: (context, controller, child) {
+                              final presetName = controller.currentPresetName;
+                              return Text(
+                                presetName ?? 'Workout Timer',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 11,
+                                  color: presetName != null ? const Color(0xFF00D4AA).withOpacity(0.8) : Colors.white.withOpacity(0.6),
+                                  letterSpacing: 0.1,
+                                  height: 1.0,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              );
+                            },
                           ),
                         ],
                       ],
                     ),
                   ),
+                  // Streak indicator integrated in header - subtle
+                  _buildCompactStreakBadge(controller),
                 ],
               ),
             ),
           ),
 
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
 
-          // Action buttons - daha az buton, daha küçük boyutlar
-          Row(
+          // Action buttons with better spacing
+          _buildHeaderActionButtons(controller, isVerySmallScreen, isSmallScreen),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactStreakBadge(TimerController controller) {
+    return FutureBuilder<int>(
+      future: controller.sessionService.getWorkoutStreak(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data! <= 1) {
+          return const SizedBox.shrink();
+        }
+
+        final streak = snapshot.data!;
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                const Color(0xFFFF6B35).withOpacity(0.3),
+                const Color(0xFFFF8E53).withOpacity(0.2),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: const Color(0xFFFF6B35).withOpacity(0.4),
+              width: 1,
+            ),
+          ),
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Presets button
-              _buildModernHeaderButton(
-                icon: Icons.library_books_outlined,
-                color: Colors.white.withOpacity(0.08),
-                iconColor: Colors.white.withOpacity(0.8),
-                size: buttonSize,
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const PresetSelectionView(),
-                  ),
-                ),
+              const Text(
+                '🔥',
+                style: TextStyle(fontSize: 12),
               ),
-              SizedBox(width: isVerySmallScreen ? 6 : 8),
-
-              // Küçük ekranlarda sadece en önemli butonları göster
-              if (!isVerySmallScreen) ...[
-                // Audio settings button
-                _buildModernHeaderButton(
-                  icon: Icons.volume_up_outlined,
-                  color: const Color(0xFF9C27B0).withOpacity(0.15),
-                  iconColor: const Color(0xFF9C27B0),
-                  size: buttonSize,
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const AudioSettingsView(),
-                    ),
-                  ),
+              const SizedBox(width: 4),
+              Text(
+                '$streak',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
                 ),
-                SizedBox(width: isVerySmallScreen ? 6 : 8),
-              ],
-
-              // Settings dropdown - çok küçük ekranlarda diğer ayarları buraya koy
-              if (isVerySmallScreen) ...[
-                _buildModernHeaderButton(
-                  icon: Icons.more_vert,
-                  color: Colors.white.withOpacity(0.08),
-                  iconColor: Colors.white.withOpacity(0.8),
-                  size: buttonSize,
-                  onPressed: () => _showMoreOptionsMenu(context, controller),
-                ),
-                const SizedBox(width: 6),
-              ] else ...[
-                // Voice coaching button - sadece büyük ekranlarda
-                _buildModernHeaderButton(
-                  icon: Icons.record_voice_over_outlined,
-                  color: const Color(0xFF9C27B0).withOpacity(0.15),
-                  iconColor: const Color(0xFF9C27B0),
-                  size: buttonSize,
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const VoiceCoachingSettingsView(),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-              ],
-
-              // Save template button - her zaman göster
-              _buildModernHeaderButton(
-                icon: Icons.bookmark_add_outlined,
-                color: const Color(0xFF00D4AA).withOpacity(0.15),
-                iconColor: const Color(0xFF00D4AA),
-                size: buttonSize,
-                onPressed: () => _showSaveTemplateDialog(controller),
-                isHighlighted: true,
               ),
             ],
           ),
-        ],
-      ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHeaderActionButtons(TimerController controller, bool isVerySmallScreen, bool isSmallScreen) {
+    final buttonSize = isVerySmallScreen ? 40.0 : 44.0;
+    final buttonSpacing = isVerySmallScreen ? 8.0 : 10.0;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Quick access - Presets
+        _buildModernHeaderButton(
+          icon: Icons.library_books_outlined,
+          color: Colors.white.withOpacity(0.06),
+          iconColor: Colors.white.withOpacity(0.8),
+          size: buttonSize,
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const PresetSelectionView(),
+            ),
+          ),
+        ),
+        SizedBox(width: buttonSpacing),
+
+        // History
+        _buildModernHeaderButton(
+          icon: Icons.analytics_outlined,
+          color: const Color(0xFF2196F3).withOpacity(0.12),
+          iconColor: const Color(0xFF2196F3),
+          size: buttonSize,
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const WorkoutHistoryView(),
+            ),
+          ),
+        ),
+        SizedBox(width: buttonSpacing),
+
+        // More options menu - consolidated for clean look
+        _buildModernHeaderButton(
+          icon: Icons.tune_rounded,
+          color: const Color(0xFF00D4AA).withOpacity(0.12),
+          iconColor: const Color(0xFF00D4AA),
+          size: buttonSize,
+          onPressed: () => _showQuickActionsMenu(context, controller),
+          isHighlighted: true,
+        ),
+      ],
     );
   }
 
@@ -477,12 +515,28 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
               ),
             ),
 
-            const SizedBox(height: 50),
+            const SizedBox(height: 24),
+
+            // Streak celebration
+            _buildStreakCelebration(controller),
+
+            const SizedBox(height: 40),
 
             // Enhanced action buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
+                _buildActionButton(
+                  icon: Icons.history,
+                  label: 'View History',
+                  color: const Color(0xFF2196F3),
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const WorkoutHistoryView(),
+                    ),
+                  ),
+                ),
                 _buildActionButton(
                   icon: Icons.settings,
                   label: 'Settings',
@@ -552,136 +606,126 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
   }
 
   Widget _buildProgressSection(TimerModel timer) {
-    final isSmallScreen = _isSmallScreen(context);
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.height < 700 || screenSize.width < 400;
     final primaryColor = timer.isInRestPeriod ? const Color(0xFFFF6B35) : const Color(0xFF00D4AA);
 
     return Container(
-      padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
+      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         gradient: LinearGradient(
           colors: [
-            primaryColor.withOpacity(0.08),
-            Colors.white.withOpacity(0.03),
+            Colors.white.withOpacity(0.06),
+            Colors.white.withOpacity(0.02),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         border: Border.all(
-          color: primaryColor.withOpacity(0.2),
+          color: Colors.white.withOpacity(0.1),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: primaryColor.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         children: [
-          // Set counter with enhanced styling
+          // Modern set counter
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: isSmallScreen ? 10 : 14,
-                  vertical: isSmallScreen ? 6 : 8,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  gradient: LinearGradient(
-                    colors: [
-                      primaryColor.withOpacity(0.3),
-                      primaryColor.withOpacity(0.2),
-                    ],
-                  ),
-                  border: Border.all(
-                    color: primaryColor.withOpacity(0.5),
-                    width: 1,
-                  ),
-                ),
-                child: Text(
-                  '${timer.currentSet}',
-                  style: TextStyle(
-                    color: primaryColor,
-                    fontSize: isSmallScreen ? 20 : 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+              _buildSetCounterBadge(
+                value: timer.currentSet,
+                color: primaryColor,
+                isActive: true,
+                isSmallScreen: isSmallScreen,
               ),
-              const SizedBox(width: 10),
-              Text(
-                'of',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.6),
-                  fontSize: isSmallScreen ? 14 : 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: isSmallScreen ? 10 : 14,
-                  vertical: isSmallScreen ? 6 : 8,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   color: Colors.white.withOpacity(0.1),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.3),
-                    width: 1,
-                  ),
                 ),
                 child: Text(
-                  '${timer.totalSets}',
+                  'of',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: isSmallScreen ? 20 : 24,
-                    fontWeight: FontWeight.bold,
+                    color: Colors.white.withOpacity(0.6),
+                    fontSize: isSmallScreen ? 13 : 14,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
+              ),
+              const SizedBox(width: 12),
+              _buildSetCounterBadge(
+                value: timer.totalSets,
+                color: Colors.white.withOpacity(0.8),
+                isActive: false,
+                isSmallScreen: isSmallScreen,
               ),
             ],
           ),
 
-          SizedBox(height: isSmallScreen ? 16 : 20),
+          const SizedBox(height: 20),
 
-          // Enhanced progress bar
+          // Modern progress bar with better styling
           Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Progress',
+                    'Workout Progress',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+                      color: Colors.white.withOpacity(0.8),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
                     ),
                   ),
-                  Text(
-                    '${(timer.progress * 100).toInt()}%',
-                    style: TextStyle(
-                      color: primaryColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: primaryColor.withOpacity(0.15),
+                      border: Border.all(
+                        color: primaryColor.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      '${(timer.progress * 100).toInt()}%',
+                      style: TextStyle(
+                        color: primaryColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Container(
-                height: 6,
+                height: 8,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(3),
-                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.white.withOpacity(0.08),
+                      Colors.white.withOpacity(0.05),
+                    ],
+                  ),
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(3),
+                  borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: timer.progress,
                     backgroundColor: Colors.transparent,
@@ -692,6 +736,60 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSetCounterBadge({
+    required int value,
+    required Color color,
+    required bool isActive,
+    required bool isSmallScreen,
+  }) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: isSmallScreen ? 12 : 16,
+        vertical: isSmallScreen ? 8 : 10,
+      ),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: isActive
+            ? LinearGradient(
+                colors: [
+                  color.withOpacity(0.2),
+                  color.withOpacity(0.1),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : LinearGradient(
+                colors: [
+                  Colors.white.withOpacity(0.08),
+                  Colors.white.withOpacity(0.04),
+                ],
+              ),
+        border: Border.all(
+          color: isActive ? color.withOpacity(0.4) : Colors.white.withOpacity(0.2),
+          width: 1.5,
+        ),
+        boxShadow: isActive
+            ? [
+                BoxShadow(
+                  color: color.withOpacity(0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
+      ),
+      child: Text(
+        '$value',
+        style: TextStyle(
+          color: color,
+          fontSize: isSmallScreen ? 18 : 22,
+          fontWeight: FontWeight.w700,
+          height: 1.0,
+        ),
       ),
     );
   }
@@ -1156,61 +1254,68 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
     );
   }
 
-  void _showMoreOptionsMenu(BuildContext context, TimerController controller) {
+  void _showQuickActionsMenu(BuildContext context, TimerController controller) {
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF1A1A1A),
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Handle bar
+            // Modern handle bar
             Container(
-              width: 40,
-              height: 4,
+              width: 36,
+              height: 3,
               decoration: BoxDecoration(
-                color: Colors.white30,
+                color: Colors.white.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
-            const Text(
-              'More Options',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+            // Header with modern styling
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFF00D4AA).withOpacity(0.2),
+                        const Color(0xFF00D4AA).withOpacity(0.1),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.tune_rounded,
+                    color: Color(0xFF00D4AA),
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Quick Actions',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
-            // Audio Settings
-            ListTile(
-              leading: const Icon(
-                Icons.volume_up_outlined,
-                color: Color(0xFF9C27B0),
-                size: 24,
-              ),
-              title: const Text(
-                'Audio Settings',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              subtitle: Text(
-                'Sound and notification settings',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
-                  fontSize: 12,
-                ),
-              ),
+            // Modern menu items
+            _buildMenuOption(
+              icon: Icons.volume_up_outlined,
+              title: 'Audio Settings',
+              subtitle: 'Sounds & notifications',
+              color: const Color(0xFF9C27B0),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -1222,28 +1327,13 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
               },
             ),
 
-            // Voice Coaching
-            ListTile(
-              leading: const Icon(
-                Icons.record_voice_over_outlined,
-                color: Color(0xFF9C27B0),
-                size: 24,
-              ),
-              title: const Text(
-                'Voice Coaching',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              subtitle: Text(
-                'Voice guidance settings',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
-                  fontSize: 12,
-                ),
-              ),
+            const SizedBox(height: 12),
+
+            _buildMenuOption(
+              icon: Icons.record_voice_over_outlined,
+              title: 'Voice Coaching',
+              subtitle: 'Voice guidance & prompts',
+              color: const Color(0xFF9C27B0),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -1255,11 +1345,120 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
               },
             ),
 
+            const SizedBox(height: 12),
+
+            _buildMenuOption(
+              icon: Icons.bookmark_add_outlined,
+              title: 'Save Template',
+              subtitle: 'Save current settings as preset',
+              color: const Color(0xFF00D4AA),
+              onTap: () {
+                Navigator.pop(context);
+                _showSaveTemplateDialog(controller);
+              },
+            ),
+
+            const SizedBox(height: 12),
+
+            _buildMenuOption(
+              icon: Icons.settings_outlined,
+              title: 'Timer Settings',
+              subtitle: 'Configure sets, duration & rest',
+              color: const Color(0xFF2196F3),
+              onTap: () {
+                Navigator.pop(context);
+                _showSettingsModal(context, controller);
+              },
+            ),
+
             const SizedBox(height: 20),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildMenuOption({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          colors: [
+            Colors.white.withOpacity(0.05),
+            Colors.white.withOpacity(0.02),
+          ],
+        ),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.08),
+          width: 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: color,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.6),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: Colors.white.withOpacity(0.3),
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showMoreOptionsMenu(BuildContext context, TimerController controller) {
+    _showQuickActionsMenu(context, controller);
   }
 
   void _showSettingsDialog(TimerController controller) {
@@ -1272,6 +1471,90 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
       builder: (context) => _SettingsModal(controller: controller),
       isScrollControlled: true,
     );
+  }
+
+  Widget _buildStreakCelebration(TimerController controller) {
+    return FutureBuilder<int>(
+      future: controller.sessionService.getWorkoutStreak(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data! <= 1) {
+          return const SizedBox.shrink();
+        }
+
+        final streak = snapshot.data!;
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [
+                const Color(0xFFFF6B35).withOpacity(0.2),
+                const Color(0xFFFF8E53).withOpacity(0.1),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: const Color(0xFFFF6B35).withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    '🔥',
+                    style: TextStyle(fontSize: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '$streak Day Streak!',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (streak >= 7) ...[
+                    const SizedBox(width: 8),
+                    const Text(
+                      '🏆',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _getStreakMessage(streak),
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.8),
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  String _getStreakMessage(int streak) {
+    if (streak < 3) {
+      return 'Keep it up! You\'re building a great habit.';
+    } else if (streak < 7) {
+      return 'Amazing consistency! Don\'t break the chain.';
+    } else if (streak < 14) {
+      return 'You\'re on fire! This is becoming a lifestyle.';
+    } else if (streak < 30) {
+      return 'Incredible dedication! You\'re unstoppable.';
+    } else {
+      return 'Legendary streak! You\'re an inspiration to others.';
+    }
   }
 }
 

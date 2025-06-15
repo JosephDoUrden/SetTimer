@@ -431,12 +431,8 @@ class _PresetSelectionViewState extends State<PresetSelectionView> {
     // Simulate loading delay for better UX
     Future.delayed(const Duration(milliseconds: 500), () {
       try {
-        controller.updateTimerSettings(
-          totalSets: preset.totalSets,
-          setDurationSeconds: preset.setDurationSeconds,
-          restDurationSeconds: preset.restDurationSeconds,
-          restAfterSets: preset.restAfterSets,
-        );
+        // Use loadPreset method instead of updateTimerSettings to preserve preset info
+        controller.loadPreset(preset);
 
         Navigator.pop(context); // Close loading dialog
         Navigator.pop(context); // Go back to timer view

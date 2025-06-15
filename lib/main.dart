@@ -32,7 +32,11 @@ class WorkoutSetTimerApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => TimerController(),
+      create: (context) {
+        final controller = TimerController();
+        controller.initialize(); // Initialize the controller and session service
+        return controller;
+      },
       child: MaterialApp(
         title: 'SetTimer',
         theme: ThemeData(
