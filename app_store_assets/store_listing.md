@@ -10,7 +10,7 @@ Minimalist timer for set-based workouts
 
 **Focus on your workout, let us handle the timing.**
 
-Workout Set Timer is the perfect companion for set-based workouts like ab training, HIIT, and interval training. Designed with minimalism in mind by mobile developer Yusufhan Saçak, this app automatically manages your sets and rest periods so you can focus entirely on your workout.
+Workout Set Timer is the perfect companion for set-based workouts like ab training, HIIT, and interval training. Designed with minimalism in mind, this app automatically manages your sets and rest periods so you can focus entirely on your workout.
 
 **Key Features:**
 • Custom set configuration (1-20 sets)

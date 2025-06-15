@@ -10,7 +10,6 @@ import 'preset_selection_view.dart';
 import 'audio_settings_view.dart';
 import 'voice_coaching_settings_view.dart';
 import 'workout_history_view.dart';
-import 'about_view.dart';
 
 class TimerView extends StatefulWidget {
   const TimerView({super.key});
@@ -266,7 +265,7 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
                             builder: (context, controller, child) {
                               final presetName = controller.currentPresetName;
                               return Text(
-                                presetName ?? 'by Yusufhan Saçak',
+                                presetName ?? 'Workout Timer',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w400,
                                   fontSize: 11,
@@ -552,52 +551,6 @@ class _TimerViewState extends State<TimerView> with TickerProviderStateMixin {
                   isPrimary: true,
                 ),
               ],
-            ),
-
-            const SizedBox(height: 32),
-
-            // Developer credit
-            GestureDetector(
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AboutView()),
-              ),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.1),
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.favorite,
-                      size: 14,
-                      color: Colors.red.withOpacity(0.8),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Made by Yusufhan Saçak',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.6),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.touch_app,
-                      size: 12,
-                      color: Colors.white.withOpacity(0.4),
-                    ),
-                  ],
-                ),
-              ),
             ),
           ],
         ),
@@ -1746,51 +1699,6 @@ class _SettingsModalState extends State<_SettingsModal> {
                 ),
               ),
             ],
-          ),
-
-          const SizedBox(height: 16),
-
-          // About button
-          SizedBox(
-            width: double.infinity,
-            child: TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const AboutView()),
-                );
-              },
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(
-                    color: Colors.white.withOpacity(0.2),
-                    width: 1,
-                  ),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    color: Colors.white.withOpacity(0.7),
-                    size: 18,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'About the App',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ),
 
           const SizedBox(height: 20),
