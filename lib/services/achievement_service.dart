@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/achievement_model.dart';
@@ -225,11 +226,14 @@ class AchievementService {
     await HapticFeedback.mediumImpact();
 
     // In a real app, you would show a proper notification dialog or snackbar
-    // This is a placeholder for the notification system
-    debugPrint('🏆 Achievement Unlocked: ${achievement.title}');
-    debugPrint('   ${achievement.description}');
-    debugPrint('   Tier: ${achievement.tier.name.toUpperCase()}');
-    debugPrint('   Points: ${AchievementDefinitions.getAchievementPoints(achievement)}');
+    // TODO: Implement proper notification system
+    // For now, we'll use debug prints in development
+    if (kDebugMode) {
+      debugPrint('🏆 Achievement Unlocked: ${achievement.title}');
+      debugPrint('   ${achievement.description}');
+      debugPrint('   Tier: ${achievement.tier.name.toUpperCase()}');
+      debugPrint('   Points: ${AchievementDefinitions.getAchievementPoints(achievement)}');
+    }
   }
 
   /// Get achievement statistics
