@@ -200,16 +200,18 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support & Contact
 
 - **Issues**: [GitHub Issues](https://github.com/yusufhansacak/settimer/issues)
-- **Email**: yusufhansck@gmail.com
+- **Discussions**: [GitHub Discussions](https://github.com/yusufhansacak/settimer/discussions)
+- **Website**: [yusufhan.dev](https://yusufhan.dev/)
 
 ## 👨‍💻 Author
 
 **Yusufhan Saçak**
-- **Email:** yusufhansck@gmail.com
-- **Medium:** [My Medium Profile](https://medium.com/@yusufhansacak)
-- **Twitter:** [@0xSCK](https://twitter.com/0xSCK)
 - **LinkedIn:** [Yusufhan Saçak](https://www.linkedin.com/in/yusufhansacak/)
+- **Twitter:** [@0xSCK](https://twitter.com/0xSCK)
+- **Medium:** [My Medium Profile](https://medium.com/@yusufhansacak)
 - **Website:** [yusufhan.dev](https://yusufhan.dev/)
+
+For business inquiries, please use LinkedIn or the contact form on my website.
 
 ---
 

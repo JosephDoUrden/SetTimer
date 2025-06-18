@@ -43,36 +43,36 @@ This backlog covers the development roadmap for Workout Set Timer v2.0, transfor
 **Epic Goal**: Track user progress and provide insights
 
 #### Sprint 2.1: Session Tracking (2 weeks)
-- [ ] **Database schema design** (1 day)
+- [X] **Database schema design** (1 day)
   - WorkoutSession model
   - Database migration strategy
-- [ ] **Session recording** (3 days)
+- [X] **Session recording** (3 days)
   - Auto-save workout sessions
   - Session completion tracking
   - Pause/resume time tracking
-- [ ] **Basic history UI** (4 days)
+- [X] **Basic history UI** (4 days)
   - History list view
   - Session detail view
   - Date filtering
-- [ ] **Data persistence** (2 days)
+- [X] **Data persistence** (2 days)
   - SQLite integration
   - Data validation
-- [ ] **Testing** (4 days)
+- [X] **Testing** (4 days)
 
 #### Sprint 2.2: Statistics & Insights (2 weeks)
-- [ ] **Statistics calculation** (3 days)
+- [X] **Statistics calculation** (3 days)
   - Weekly/monthly totals
   - Streak calculations
   - Average session metrics
-- [ ] **Analytics UI** (4 days)
+- [X] **Analytics UI** (4 days)
   - Statistics dashboard
   - Charts and graphs (fl_chart package)
   - Progress visualization
-- [ ] **Achievement system** (3 days)
+- [X] **Achievement system** (3 days)
   - Achievement definitions
   - Achievement unlock logic
   - Achievement notifications
-- [ ] **Performance optimization** (4 days)
+- [X] **Performance optimization** (4 days)
 
 #### Sprint 2.3: Data Export & Insights (1 week)
 - [ ] **Export functionality** (2 days)

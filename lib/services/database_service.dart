@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/preset_model.dart';
+import '../models/workout_session_model.dart';
 
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
@@ -22,13 +23,14 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDatabase,
       onUpgrade: _upgradeDatabase,
     );
   }
 
   Future<void> _createDatabase(Database db, int version) async {
+    // Create presets table
     await db.execute('''
       CREATE TABLE custom_presets (
         id TEXT PRIMARY KEY,
@@ -46,16 +48,86 @@ class DatabaseService {
       )
     ''');
 
-    // Create index for better performance
+    // Create workout sessions table
+    await db.execute('''
+      CREATE TABLE workout_sessions (
+        id TEXT PRIMARY KEY,
+        presetId TEXT,
+        presetName TEXT,
+        totalSets INTEGER NOT NULL,
+        setDurationSeconds INTEGER NOT NULL,
+        restDurationSeconds INTEGER NOT NULL,
+        restAfterSets INTEGER NOT NULL,
+        completedSets INTEGER NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'inProgress',
+        startTime TEXT NOT NULL,
+        endTime TEXT,
+        totalPausedDurationSeconds INTEGER NOT NULL DEFAULT 0,
+        actualWorkoutDurationSeconds INTEGER NOT NULL DEFAULT 0,
+        completionPercentage REAL NOT NULL DEFAULT 0.0,
+        metadata TEXT,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL,
+        FOREIGN KEY (presetId) REFERENCES custom_presets (id) ON DELETE SET NULL
+      )
+    ''');
+
+    // Create indexes for better performance
     await db.execute('''
       CREATE INDEX idx_custom_presets_category ON custom_presets(category)
+    ''');
+
+    await db.execute('''
+      CREATE INDEX idx_workout_sessions_start_time ON workout_sessions(startTime)
+    ''');
+
+    await db.execute('''
+      CREATE INDEX idx_workout_sessions_status ON workout_sessions(status)
+    ''');
+
+    await db.execute('''
+      CREATE INDEX idx_workout_sessions_preset_id ON workout_sessions(presetId)
     ''');
   }
 
   Future<void> _upgradeDatabase(Database db, int oldVersion, int newVersion) async {
-    // Handle database schema upgrades in future versions
     if (oldVersion < 2) {
-      // Example: Add new columns or tables
+      // Add workout sessions table
+      await db.execute('''
+        CREATE TABLE workout_sessions (
+          id TEXT PRIMARY KEY,
+          presetId TEXT,
+          presetName TEXT,
+          totalSets INTEGER NOT NULL,
+          setDurationSeconds INTEGER NOT NULL,
+          restDurationSeconds INTEGER NOT NULL,
+          restAfterSets INTEGER NOT NULL,
+          completedSets INTEGER NOT NULL DEFAULT 0,
+          status TEXT NOT NULL DEFAULT 'inProgress',
+          startTime TEXT NOT NULL,
+          endTime TEXT,
+          totalPausedDurationSeconds INTEGER NOT NULL DEFAULT 0,
+          actualWorkoutDurationSeconds INTEGER NOT NULL DEFAULT 0,
+          completionPercentage REAL NOT NULL DEFAULT 0.0,
+          metadata TEXT,
+          createdAt TEXT NOT NULL,
+          updatedAt TEXT NOT NULL,
+          FOREIGN KEY (presetId) REFERENCES custom_presets (id) ON DELETE SET NULL
+        )
+      ''');
+
+      // Create indexes for workout sessions
+      await db.execute('''
+        CREATE INDEX idx_workout_sessions_start_time ON workout_sessions(startTime)
+      ''');
+
+      await db.execute('''
+        CREATE INDEX idx_workout_sessions_status ON workout_sessions(status)
+      ''');
+
+      await db.execute('''
+        CREATE INDEX idx_workout_sessions_preset_id ON workout_sessions(presetId)
+      ''');
     }
   }
 
@@ -215,6 +287,241 @@ class DatabaseService {
     final db = await database;
     final result = await db.rawQuery('SELECT COUNT(*) as count FROM custom_presets');
     return Sqflite.firstIntValue(result) ?? 0;
+  }
+
+  /// Save a workout session to the database
+  Future<void> saveWorkoutSession(WorkoutSession session) async {
+    final db = await database;
+    final now = DateTime.now().toIso8601String();
+
+    final sessionData = session.toJson();
+    sessionData['createdAt'] = now;
+    sessionData['updatedAt'] = now;
+
+    await db.insert(
+      'workout_sessions',
+      sessionData,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Update an existing workout session
+  Future<void> updateWorkoutSession(WorkoutSession session) async {
+    final db = await database;
+    final now = DateTime.now().toIso8601String();
+
+    final sessionData = session.toJson();
+    sessionData['updatedAt'] = now;
+
+    await db.update(
+      'workout_sessions',
+      sessionData,
+      where: 'id = ?',
+      whereArgs: [session.id],
+    );
+  }
+
+  /// Get a workout session by ID
+  Future<WorkoutSession?> getWorkoutSessionById(String id) async {
+    final db = await database;
+    final maps = await db.query(
+      'workout_sessions',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+
+    if (maps.isEmpty) return null;
+
+    final map = maps.first;
+    final sessionMap = Map<String, dynamic>.from(map);
+    sessionMap.remove('createdAt');
+    sessionMap.remove('updatedAt');
+    return WorkoutSession.fromJson(sessionMap);
+  }
+
+  /// Get all workout sessions ordered by start time (most recent first)
+  Future<List<WorkoutSession>> getAllWorkoutSessions({
+    int? limit,
+    int? offset,
+  }) async {
+    final db = await database;
+    final maps = await db.query(
+      'workout_sessions',
+      orderBy: 'startTime DESC',
+      limit: limit,
+      offset: offset,
+    );
+
+    return maps.map((map) {
+      final sessionMap = Map<String, dynamic>.from(map);
+      sessionMap.remove('createdAt');
+      sessionMap.remove('updatedAt');
+      return WorkoutSession.fromJson(sessionMap);
+    }).toList();
+  }
+
+  /// Get workout sessions within a date range
+  Future<List<WorkoutSession>> getWorkoutSessionsByDateRange({
+    required DateTime startDate,
+    required DateTime endDate,
+    int? limit,
+  }) async {
+    final db = await database;
+    final maps = await db.query(
+      'workout_sessions',
+      where: 'startTime >= ? AND startTime <= ?',
+      whereArgs: [
+        startDate.toIso8601String(),
+        endDate.toIso8601String(),
+      ],
+      orderBy: 'startTime DESC',
+      limit: limit,
+    );
+
+    return maps.map((map) {
+      final sessionMap = Map<String, dynamic>.from(map);
+      sessionMap.remove('createdAt');
+      sessionMap.remove('updatedAt');
+      return WorkoutSession.fromJson(sessionMap);
+    }).toList();
+  }
+
+  /// Get workout sessions by status
+  Future<List<WorkoutSession>> getWorkoutSessionsByStatus(
+    SessionStatus status, {
+    int? limit,
+  }) async {
+    final db = await database;
+    final maps = await db.query(
+      'workout_sessions',
+      where: 'status = ?',
+      whereArgs: [status.name],
+      orderBy: 'startTime DESC',
+      limit: limit,
+    );
+
+    return maps.map((map) {
+      final sessionMap = Map<String, dynamic>.from(map);
+      sessionMap.remove('createdAt');
+      sessionMap.remove('updatedAt');
+      return WorkoutSession.fromJson(sessionMap);
+    }).toList();
+  }
+
+  /// Get workout sessions for a specific preset
+  Future<List<WorkoutSession>> getWorkoutSessionsByPreset(
+    String presetId, {
+    int? limit,
+  }) async {
+    final db = await database;
+    final maps = await db.query(
+      'workout_sessions',
+      where: 'presetId = ?',
+      whereArgs: [presetId],
+      orderBy: 'startTime DESC',
+      limit: limit,
+    );
+
+    return maps.map((map) {
+      final sessionMap = Map<String, dynamic>.from(map);
+      sessionMap.remove('createdAt');
+      sessionMap.remove('updatedAt');
+      return WorkoutSession.fromJson(sessionMap);
+    }).toList();
+  }
+
+  /// Delete a workout session
+  Future<void> deleteWorkoutSession(String id) async {
+    final db = await database;
+    await db.delete(
+      'workout_sessions',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// Get workout statistics
+  Future<Map<String, dynamic>> getWorkoutStatistics({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    final db = await database;
+
+    String whereClause = '';
+    List<dynamic> whereArgs = [];
+
+    if (startDate != null && endDate != null) {
+      whereClause = 'WHERE startTime >= ? AND startTime <= ?';
+      whereArgs = [startDate.toIso8601String(), endDate.toIso8601String()];
+    }
+
+    // Total sessions
+    final totalResult = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM workout_sessions $whereClause',
+      whereArgs,
+    );
+    final totalSessions = Sqflite.firstIntValue(totalResult) ?? 0;
+
+    // Completed sessions
+    final completedWhereClause = whereClause.isEmpty ? "WHERE status = 'completed'" : "$whereClause AND status = 'completed'";
+    final completedArgs = [...whereArgs, if (whereClause.isEmpty) 'completed'];
+
+    final completedResult = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM workout_sessions $completedWhereClause',
+      completedArgs,
+    );
+    final completedSessions = Sqflite.firstIntValue(completedResult) ?? 0;
+
+    // Total workout time (for completed sessions)
+    final timeResult = await db.rawQuery(
+      'SELECT SUM(actualWorkoutDurationSeconds) as total FROM workout_sessions $completedWhereClause',
+      completedArgs,
+    );
+    final totalWorkoutSeconds = Sqflite.firstIntValue(timeResult) ?? 0;
+
+    // Average session duration
+    final avgResult = await db.rawQuery(
+      'SELECT AVG(actualWorkoutDurationSeconds) as avg FROM workout_sessions $completedWhereClause',
+      completedArgs,
+    );
+    final avgWorkoutSeconds = (avgResult.first['avg'] as num?)?.round() ?? 0;
+
+    // Total sets completed
+    final setsResult = await db.rawQuery(
+      'SELECT SUM(completedSets) as total FROM workout_sessions $completedWhereClause',
+      completedArgs,
+    );
+    final totalSetsCompleted = Sqflite.firstIntValue(setsResult) ?? 0;
+
+    return {
+      'totalSessions': totalSessions,
+      'completedSessions': completedSessions,
+      'totalWorkoutTimeSeconds': totalWorkoutSeconds,
+      'averageWorkoutTimeSeconds': avgWorkoutSeconds,
+      'totalSetsCompleted': totalSetsCompleted,
+      'completionRate': totalSessions > 0 ? (completedSessions / totalSessions * 100) : 0.0,
+    };
+  }
+
+  /// Get current active session (if any)
+  Future<WorkoutSession?> getCurrentActiveSession() async {
+    final db = await database;
+    final maps = await db.query(
+      'workout_sessions',
+      where: 'status IN (?, ?)',
+      whereArgs: ['inProgress', 'paused'],
+      orderBy: 'startTime DESC',
+      limit: 1,
+    );
+
+    if (maps.isEmpty) return null;
+
+    final map = maps.first;
+    final sessionMap = Map<String, dynamic>.from(map);
+    sessionMap.remove('createdAt');
+    sessionMap.remove('updatedAt');
+    return WorkoutSession.fromJson(sessionMap);
   }
 
   /// Close the database connection
