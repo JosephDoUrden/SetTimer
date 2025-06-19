@@ -1,7 +1,7 @@
 # Product Requirement Document: Workout Set Timer
 
 ## Overview
-Workout Set Timer is a minimalist workout timer tailored specifically for ab/core workouts, HIIT, and interval training. Currently published on app stores with positive user feedback.
+Workout Set Timer is a minimalist workout timer tailored specifically for ab/core workouts, HIIT, and interval training. This open source project by **Yusufhan Saçak** demonstrates modern Flutter development practices while providing real value to the fitness community.
 
 ## Current Version (1.0) - LIVE ✅
 Successfully launched with core MVP features serving fitness enthusiasts who need focused, distraction-free workout timing.
@@ -23,6 +23,7 @@ Successfully launched with core MVP features serving fitness enthusiasts who nee
 - **Primary**: Current users seeking more workout variety
 - **Secondary**: HIIT enthusiasts, tabata practitioners
 - **Tertiary**: Gym-goers wanting structured rest periods
+- **Developers**: Flutter developers learning from open source best practices
 
 ### Phase 1: User-Requested Features (Next 2-3 months)
 #### A. Workout Presets & Templates
@@ -39,9 +40,10 @@ Successfully launched with core MVP features serving fitness enthusiasts who nee
 - **Weekly/Monthly Stats**: Total workout time, consistency streaks
 - **Progress Insights**: Average session length, most used presets
 - **Achievement System**: Workout streaks, total sets milestones
+- **Data Export**: CSV and JSON export for power users
 
 #### C. Enhanced Audio Experience 🔊
-- **Custom Sound Packs**: Different themes (gym, nature, electronic)
+- **Custom Sound Packs**: Different themes (gym, nature, electronic, minimal)
 - **Voice Coaching**: Optional countdown voice ("3, 2, 1, GO!")
 - **Music Integration**: Play over Spotify/Apple Music with smart ducking
 - **Haptic Feedback**: Vibration patterns for different phases
@@ -63,28 +65,14 @@ Successfully launched with core MVP features serving fitness enthusiasts who nee
 - **Heart Rate Integration**: Track intensity during work/rest periods
 - **Health App Sync**: Export workouts to Apple Health/Google Fit
 
-### Phase 3: Premium Features (6-12 months)
-#### G. Workout Set Timer Pro (Subscription Model) 💎
-**Free Tier Limitations**:
-- 3 custom templates max
-- Basic sound pack only
-- No workout history export
-
-**Pro Features ($2.99/month or $19.99/year)**:
-- Unlimited custom templates
-- Premium sound packs & voice coaching
-- Advanced analytics & insights
-- Cloud sync across devices
-- Priority customer support
-- Early access to new features
-
-#### H. Advanced Workout Types 🏋️
+### Phase 3: Advanced Features (6-12 months)
+#### G. Advanced Workout Types 🏋️
 - **Circuit Training**: Multiple exercise types with different timers
 - **Pyramid Workouts**: Ascending/descending interval lengths
-- **Emom Training**: Every minute on the minute protocols
+- **EMOM Training**: Every minute on the minute protocols
 - **Custom Sequences**: Complex workout structures
 
-#### I. Integration Ecosystem 🔗
+#### H. Integration Ecosystem 🔗
 - **Fitness App Sync**: MyFitnessPal, Strava, Nike Training Club
 - **Smart Home**: Philips Hue lighting changes during phases
 - **Workout Equipment**: Integration with smart dumbbells/mats
@@ -110,6 +98,9 @@ cloud_firestore: ^4.13.0
 sqflite: ^2.3.0
 hive: ^2.2.3
 
+# Charts & Visualization
+fl_chart: ^0.65.0
+
 # Social & Sharing
 share_plus: ^7.2.0
 qr_flutter: ^4.1.0
@@ -121,6 +112,9 @@ flutter_tts: ^3.8.0
 # Wearables
 health: ^10.1.0
 wear: ^1.1.0
+
+# State Management
+flutter_riverpod: ^2.4.9
 ```
 
 ## Success Metrics & KPIs
@@ -134,9 +128,10 @@ wear: ^1.1.0
 ### Version 2.0 Goals
 - **User Engagement**: 40% increase in average session duration
 - **Retention**: 25% improvement in 30-day retention
-- **Monetization**: $10K+ monthly recurring revenue from Pro subscriptions
 - **Growth**: 100K+ total downloads within 6 months
 - **Community**: 10K+ custom templates shared by users
+- **Developer Showcase**: Strong portfolio piece demonstrating Flutter expertise
+- **Open Source Impact**: Active contributor community and GitHub stars
 
 ## Competitive Analysis
 
@@ -150,6 +145,7 @@ wear: ^1.1.0
 - **Background Reliability**: Superior background performance
 - **Modern UI**: Most beautiful interface in category
 - **Focus on Sets**: Only app optimized specifically for set-based training
+- **Open Source**: Transparent development and community-driven improvements
 
 ## Implementation Priority
 
@@ -164,7 +160,7 @@ wear: ^1.1.0
 3. **Achievement System** - Increase engagement
 
 ### Long-term (3-12 months)
-1. **Pro Subscription** - Revenue generation
+1. **Advanced Workout Types** - Comprehensive functionality
 2. **Social Features** - Community building
 3. **Smart Adaptations** - AI-powered personalization
 
@@ -177,30 +173,33 @@ wear: ^1.1.0
 ## Risk Assessment
 
 ### Technical Risks
-- **Backend Scaling**: Firebase costs with user growth
+- **Firebase costs**: Implement usage monitoring and optimization
 - **Cross-platform Consistency**: Maintaining UI/UX parity
 - **Apple Watch Development**: New platform complexity
 
-### Business Risks
+### Open Source Risks
 - **Feature Creep**: Losing simplicity advantage
+- **Community Management**: Balancing feature requests with vision
 - **Competition**: Established players copying features
-- **Monetization Balance**: Not alienating free users
 
 ### Mitigation Strategies
 - Gradual feature rollout with A/B testing
 - Strong focus on core use case in all decisions
-- Premium features enhance rather than gate core functionality
+- Clear contribution guidelines and roadmap communication
+- Emphasis on unique features that showcase developer skills
 
 ## Success Definition
 Version 2.0 is successful if:
 1. **User Satisfaction**: Maintains 4.5+ star rating with new features
-2. **Business Growth**: Achieves sustainable revenue stream
-3. **Market Position**: Becomes the definitive set-based timer app
+2. **Developer Portfolio**: Demonstrates advanced Flutter development skills
+3. **Market Position**: Becomes the definitive open source set-based timer app
 4. **Technical Excellence**: Scales smoothly to 100K+ users
 5. **Community Health**: Active user-generated content and sharing
+6. **Personal Branding**: Establishes Yusufhan Saçak as a skilled Flutter developer
 
 ---
 
+**Project Owner**: Yusufhan Saçak
 **Next Review**: Every 2 weeks during development
-**Stakeholder Approval**: Required for Phase 2+ features
-**User Feedback Integration**: Continuous through in-app feedback and app store reviews
+**Community Input**: Continuous through GitHub discussions and app store reviews
+**User Feedback Integration**: Continuous through in-app feedback and analytics

@@ -12,6 +12,8 @@ Minimalist timer for set-based workouts
 
 Workout Set Timer is the perfect companion for set-based workouts like ab training, HIIT, and interval training. Designed with minimalism in mind, this app automatically manages your sets and rest periods so you can focus entirely on your workout.
 
+Created by **Yusufhan Saçak** as an open source project demonstrating modern Flutter development while providing real value to the fitness community.
+
 **Key Features:**
 • Custom set configuration (1-20 sets)
 • Flexible set duration (10 seconds to 5 minutes)
@@ -31,7 +33,7 @@ Workout Set Timer is the perfect companion for set-based workouts like ab traini
 • Any set-based workout routine
 
 **Why Choose SetTimer:**
-Unlike complex fitness apps, we focus on one thing and do it perfectly: timing your sets. No distractions, no social features, no subscriptions - just a reliable timer that works when you need it most.
+Unlike complex fitness apps, we focus on one thing and do it perfectly: timing your sets. No distractions, no social features, no subscriptions - just a reliable, open source timer that works when you need it most.
 
 The app continues running even when your screen is locked or you switch to other apps, ensuring your workout never gets interrupted.
 
@@ -43,8 +45,11 @@ The app continues running even when your screen is locked or you switch to other
 
 Clean, intuitive, and reliable - exactly what your workout deserves.
 
+**Open Source:**
+This project is available on GitHub, showcasing modern Flutter development practices and welcoming community contributions.
+
 ## Keywords
-workout timer, set timer, interval timer, HIIT timer, fitness timer, exercise timer, gym timer, workout app, fitness app, training timer
+workout timer, set timer, interval timer, HIIT timer, fitness timer, exercise timer, gym timer, workout app, fitness app, training timer, open source, flutter
 
 ## Category
 Health & Fitness / Sports
@@ -60,3 +65,5 @@ Health & Fitness / Sports
 - training
 - sets
 - minimalist
+- open source
+- flutter

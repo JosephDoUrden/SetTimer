@@ -1,7 +1,7 @@
 # Version 2.0 Development Backlog: Workout Set Timer
 
 ## Overview
-This backlog covers the development roadmap for Workout Set Timer v2.0, transforming the app from a simple timer to a comprehensive workout companion while maintaining its core simplicity.
+This backlog covers the development roadmap for Workout Set Timer v2.0, transforming the app from a simple timer to a comprehensive workout companion while maintaining its core simplicity. This is an open source project created by **Yusufhan Saçak** to showcase modern Flutter development practices and provide value to the fitness community.
 
 ## Phase 1: User-Requested Features (Months 1-3)
 **Priority: HIGH | Target: Enhanced User Experience**
@@ -81,7 +81,7 @@ This backlog covers the development roadmap for Workout Set Timer v2.0, transfor
 - [ ] **Advanced insights** (3 days)
   - Best performance analysis
   - Trend identification
-- [ ] **Pro feature gating** (2 days)
+- [ ] **Testing & polish** (2 days)
 
 ### C. Enhanced Audio Experience 🔊
 **Epic Goal**: Rich audio feedback and customization
@@ -218,43 +218,13 @@ This backlog covers the development roadmap for Workout Set Timer v2.0, transfor
 - [ ] **Privacy compliance** (2 days)
 - [ ] **Testing** (1 day)
 
-## Phase 3: Premium Features (Months 7-12)
-**Priority: LOW | Target: Monetization & Advanced Features**
+## Phase 3: Advanced Features (Months 7-12)
+**Priority: LOW | Target: Advanced User Experience**
 
-### G. Workout Set Timer Pro 💎
-**Epic Goal**: Sustainable revenue stream
-
-#### Sprint 7.1: Subscription System (2 weeks)
-- [ ] **Revenue Cat integration** (3 days)
-  - Subscription management
-  - Cross-platform sync
-- [ ] **Paywall design** (3 days)
-  - Feature comparison
-  - Subscription options UI
-- [ ] **Free tier limitations** (2 days)
-  - 3 custom template limit
-  - Basic sound pack only
-  - History export restrictions
-- [ ] **Pro feature implementation** (4 days)
-- [ ] **Testing & compliance** (2 days)
-
-#### Sprint 7.2: Premium Features (2 weeks)
-- [ ] **Advanced analytics** (4 days)
-  - Detailed insights
-  - Export capabilities
-  - Custom reports
-- [ ] **Premium sound packs** (3 days)
-  - Professional audio content
-  - Voice coaching varieties
-- [ ] **Cloud sync** (4 days)
-  - Firebase sync
-  - Cross-device templates
-- [ ] **Priority support** (3 days)
-
-### H. Advanced Workout Types 🏋️
+### G. Advanced Workout Types 🏋️
 **Epic Goal**: Comprehensive workout support
 
-#### Sprint 8.1: Circuit Training (3 weeks)
+#### Sprint 7.1: Circuit Training (3 weeks)
 - [ ] **Multi-exercise timer** (5 days)
   - Exercise sequence management
   - Different timers per exercise
@@ -266,7 +236,7 @@ This backlog covers the development roadmap for Workout Set Timer v2.0, transfor
   - Visual cues
 - [ ] **Testing & polish** (5 days)
 
-#### Sprint 8.2: Pyramid & EMOM Workouts (2 weeks)
+#### Sprint 7.2: Pyramid & EMOM Workouts (2 weeks)
 - [ ] **Pyramid workout logic** (4 days)
   - Ascending/descending intervals
   - Custom pyramid patterns
@@ -276,10 +246,10 @@ This backlog covers the development roadmap for Workout Set Timer v2.0, transfor
 - [ ] **Advanced timer UI** (4 days)
 - [ ] **Testing** (3 days)
 
-### I. Integration Ecosystem 🔗
+### H. Integration Ecosystem 🔗
 **Epic Goal**: Seamless app ecosystem integration
 
-#### Sprint 9.1: Fitness App Sync (2 weeks)
+#### Sprint 8.1: Fitness App Sync (2 weeks)
 - [ ] **API integrations** (5 days)
   - MyFitnessPal API
   - Strava API
@@ -290,7 +260,7 @@ This backlog covers the development roadmap for Workout Set Timer v2.0, transfor
 - [ ] **Sync UI & settings** (3 days)
 - [ ] **Error handling** (3 days)
 
-#### Sprint 9.2: Smart Home Integration (1 week)
+#### Sprint 8.2: Smart Home Integration (1 week)
 - [ ] **Philips Hue integration** (3 days)
   - Light color changes
   - Brightness adjustments
@@ -347,9 +317,6 @@ flutter_tts: ^3.8.0
 health: ^10.1.0
 wear: ^1.1.0
 
-# Monetization
-purchases_flutter: ^6.12.0
-
 # State Management
 flutter_riverpod: ^2.4.9
 
@@ -371,9 +338,9 @@ dio: ^5.3.2
 - [ ] Social features drive 25% user engagement increase
 
 ### Phase 3 Success Criteria
-- [ ] 15% conversion to Pro subscription
-- [ ] $10K+ monthly recurring revenue
-- [ ] Enterprise/coach features validated
+- [ ] Advanced workout types adopted by 20% of users
+- [ ] Community growth through template sharing
+- [ ] Strong developer portfolio showcase for Yusufhan Saçak
 
 ## Risk Mitigation
 
@@ -382,10 +349,10 @@ dio: ^5.3.2
 - **Apple Watch complexity**: Start with MVP, iterate based on feedback
 - **Performance with new features**: Continuous performance testing
 
-### Business Risks
+### Open Source Risks
 - **Feature bloat**: Maintain focus on core timer functionality
-- **Subscription model**: A/B test pricing and feature gating
-- **Competition**: Rapid iteration and unique feature development
+- **Community management**: Establish clear contribution guidelines
+- **Competition**: Focus on unique features and developer branding
 
 ## Review & Adjustment Schedule
 - **Weekly**: Sprint progress review
@@ -395,6 +362,7 @@ dio: ^5.3.2
 
 ---
 
+**Project Maintainer**: Yusufhan Saçak
 **Next Update**: Weekly sprint planning sessions
-**Stakeholder Reviews**: Monthly roadmap reviews
+**Community Reviews**: Monthly roadmap reviews
 **User Feedback Integration**: Continuous through analytics and app store reviews
