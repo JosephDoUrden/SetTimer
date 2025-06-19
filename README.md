@@ -2,6 +2,8 @@
 
 A minimalist workout timer app designed specifically for set-based workouts like ab/core training, HIIT, and interval training. Focus on your workout while Workout Set Timer handles the timing automatically.
 
+**Created by [Yusufhan Saçak](https://yusufhan.dev/)** as an open source project demonstrating modern Flutter development practices while providing real value to the fitness community.
+
 ## ✨ Features
 
 - **Custom Set Configuration**: Set any number of sets (1-20)
@@ -16,7 +18,21 @@ A minimalist workout timer app designed specifically for set-based workouts like
 
 ## 📱 Screenshots
 
-*Screenshots will be added after app store submission*
+<div align="center">
+  <img src="assets/images/Simulator Screenshot - iPhone 15 Pro Max - 2025-06-14 at 21.43.11.png" width="200" alt="Timer Ready State" />
+  <img src="assets/images/Simulator Screenshot - iPhone 15 Pro Max - 2025-06-14 at 21.43.26.png" width="200" alt="Timer Configuration" />
+  <img src="assets/images/Simulator Screenshot - iPhone 15 Pro Max - 2025-06-14 at 21.44.00.png" width="200" alt="Timer Running" />
+  <img src="assets/images/Simulator Screenshot - iPhone 15 Pro Max - 2025-06-14 at 21.44.23.png" width="200" alt="Timer In Progress" />
+</div>
+
+<div align="center">
+  <img src="assets/images/Simulator Screenshot - iPhone 15 Pro Max - 2025-06-14 at 21.44.28.png" width="200" alt="Settings Screen" />
+  <img src="assets/images/Simulator Screenshot - iPhone 15 Pro Max - 2025-06-14 at 21.44.33.png" width="200" alt="Timer Settings" />
+  <img src="assets/images/Simulator Screenshot - iPhone 15 Pro Max - 2025-06-14 at 21.44.37.png" width="200" alt="Rest Period" />
+  <img src="assets/images/Simulator Screenshot - iPhone 15 Pro Max - 2025-06-14 at 21.44.41.png" width="200" alt="Workout Complete" />
+</div>
+
+*Beautiful dark theme with modern gradients and intuitive controls*
 
 ## 🚀 Getting Started
 
