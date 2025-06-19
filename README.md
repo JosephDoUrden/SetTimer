@@ -46,7 +46,7 @@ A minimalist workout timer app designed specifically for set-based workouts like
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yusufhansacak/settimer.git
+   git clone https://github.com/JosephDoUrden/settimer.git
    cd settimer
    ```
 
@@ -215,8 +215,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support & Contact
 
-- **Issues**: [GitHub Issues](https://github.com/yusufhansacak/settimer/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yusufhansacak/settimer/discussions)
+- **Issues**: [GitHub Issues](https://github.com/JosephDoUrden/settimer/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/JosephDoUrden/settimer/discussions)
 - **Website**: [yusufhan.dev](https://yusufhan.dev/)
 
 ## 👨‍💻 Author

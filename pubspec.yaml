@@ -1,5 +1,7 @@
 name: settimer
 description: "SetTimer - A minimalist workout timer for set-based workouts, HIIT, and interval training. Focus on your workout while we handle the timing."
+homepage: https://yusufhan.dev/
+repository: https://github.com/JosephDoUrden/settimer
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43

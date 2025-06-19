@@ -24,7 +24,7 @@ We welcome contributions to SetTimer! This document provides guidelines for cont
 ### Installation
 ```bash
 # Clone the repository
-git clone https://github.com/yusufhansacak/settimer.git
+git clone https://github.com/JosephDoUrden/settimer.git
 cd settimer
 
 # Install dependencies
@@ -146,8 +146,8 @@ See [BACKLOG_V2.md](BACKLOG_V2.md) for planned features and development timeline
 
 ## Questions?
 
-- Check existing [Issues](https://github.com/yusufhansacak/settimer/issues)
-- Start a [Discussion](https://github.com/yusufhansacak/settimer/discussions)
+- Check existing [Issues](https://github.com/JosephDoUrden/settimer/issues)
+- Start a [Discussion](https://github.com/JosephDoUrden/settimer/discussions)
 - Read the [README](README.md) for basic information
 
 ## License
