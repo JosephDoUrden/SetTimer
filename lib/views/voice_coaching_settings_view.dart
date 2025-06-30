@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import '../services/voice_coaching_service.dart';
 
 class VoiceCoachingSettingsView extends StatefulWidget {
@@ -66,6 +67,8 @@ class _VoiceCoachingSettingsViewState extends State<VoiceCoachingSettingsView> w
                         _buildCoachingStyleSection(),
                         const SizedBox(height: 32),
                         _buildVoiceControlsSection(),
+                        const SizedBox(height: 32),
+                        _buildTtsProviderSection(),
                         const SizedBox(height: 32),
                         _buildAnnouncementOptionsSection(),
                         const SizedBox(height: 32),
@@ -269,6 +272,13 @@ class _VoiceCoachingSettingsViewState extends State<VoiceCoachingSettingsView> w
             await _voiceService.setVoiceGender(gender);
             // Then update UI state
             setState(() {});
+            
+            // Play a test sample so user can hear the difference immediately
+            await Future.delayed(const Duration(milliseconds: 300));
+            await _voiceService.testVoice();
+            
+            // Show feedback
+            HapticFeedback.lightImpact();
           },
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -809,6 +819,220 @@ class _VoiceCoachingSettingsViewState extends State<VoiceCoachingSettingsView> w
         ),
       ],
     );
+  }
+
+  Widget _buildTtsProviderSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(
+          'Voice Quality',
+          'Choose your text-to-speech engine',
+          Icons.high_quality,
+        ),
+        const SizedBox(height: 16),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 1,
+            childAspectRatio: 4.0,
+            mainAxisSpacing: 12,
+          ),
+          itemCount: TtsProvider.values.length,
+          itemBuilder: (context, index) {
+            final provider = TtsProvider.values[index];
+            // Check if this provider is currently selected
+            final isSelected = provider == _voiceService.ttsProvider;
+            return _buildTtsProviderCard(provider, isSelected);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTtsProviderCard(TtsProvider provider, bool isSelected) {
+    final providerInfo = _getTtsProviderInfo(provider);
+    final color = providerInfo['color'] as Color;
+    final available = providerInfo['available'] as bool;
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        gradient: isSelected
+            ? LinearGradient(
+                colors: [
+                  color.withOpacity(0.2),
+                  color.withOpacity(0.1),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : LinearGradient(
+                colors: [
+                  Colors.white.withOpacity(available ? 0.08 : 0.04),
+                  Colors.white.withOpacity(available ? 0.04 : 0.02),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+        border: Border.all(
+          color: isSelected ? color.withOpacity(0.5) : Colors.white.withOpacity(available ? 0.12 : 0.06),
+          width: isSelected ? 2 : 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: available ? () async {
+            // Switch TTS provider
+            await _voiceService.setTtsProvider(provider);
+            setState(() {});
+            
+            // Test the new voice immediately
+            await Future.delayed(const Duration(milliseconds: 300));
+            await _voiceService.testVoice();
+            
+            HapticFeedback.lightImpact();
+            
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Voice quality changed to ${providerInfo['name']}! Listen to the difference!'),
+                backgroundColor: color,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          } : () {
+            // Show unavailable message with helpful hint
+            final String platformHint = kIsWeb 
+                ? 'This feature is not yet fully implemented.'
+                : 'Try running the app in a web browser (Chrome/Safari) for better voice quality!';
+                
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('${providerInfo['name']} is not available on this platform. $platformHint'),
+                backgroundColor: Colors.orange,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: available 
+                          ? LinearGradient(
+                              colors: [color, color.withOpacity(0.7)],
+                            )
+                          : LinearGradient(
+                              colors: [Colors.grey.withOpacity(0.5), Colors.grey.withOpacity(0.3)],
+                            ),
+                    ),
+                    child: Icon(
+                      providerInfo['icon'] as IconData,
+                      color: available ? Colors.white : Colors.grey.shade400,
+                      size: 24,
+                    ),
+                  ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        providerInfo['name'] as String,
+                        style: TextStyle(
+                          color: available 
+                              ? (isSelected ? color : Colors.white)
+                              : Colors.grey,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        providerInfo['description'] as String,
+                        style: TextStyle(
+                          color: available 
+                              ? Colors.white.withOpacity(0.7)
+                              : Colors.grey.withOpacity(0.7),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (providerInfo['badge'] != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      color: available 
+                          ? color.withOpacity(0.2)
+                          : Colors.grey.withOpacity(0.2),
+                    ),
+                    child: Text(
+                      providerInfo['badge'] as String,
+                      style: TextStyle(
+                        color: available ? color : Colors.grey,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Map<String, dynamic> _getTtsProviderInfo(TtsProvider provider) {
+    final bool isWeb = kIsWeb;
+    
+    switch (provider) {
+      case TtsProvider.device:
+        return {
+          'name': 'Device TTS',
+          'description': 'Built-in text-to-speech (works everywhere)',
+          'icon': Icons.smartphone,
+          'color': const Color(0xFF757575),
+          'badge': 'FREE',
+          'available': true,
+        };
+      case TtsProvider.cloud:
+        return {
+          'name': isWeb ? 'Web Speech API' : 'Cloud TTS',
+          'description': isWeb 
+              ? 'High-quality browser voices (web only)'
+              : 'Premium cloud voices (web only for now)',
+          'icon': isWeb ? Icons.web : Icons.cloud_off,
+          'color': isWeb ? const Color(0xFF00D4AA) : const Color(0xFF9E9E9E),
+          'badge': isWeb ? 'BETTER' : 'WEB ONLY',
+          'available': isWeb,
+        };
+      case TtsProvider.elevenlabs:
+        return {
+          'name': 'ElevenLabs AI',
+          'description': 'Ultra-realistic AI voices (coming soon)',
+          'icon': Icons.auto_awesome,
+          'color': const Color(0xFF9E9E9E),
+          'badge': 'COMING SOON',
+          'available': false,
+        };
+    }
   }
 
   Map<String, dynamic> _getCoachingStyleInfo(CoachingStyle style) {

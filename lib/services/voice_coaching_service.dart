@@ -1,8 +1,16 @@
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart';
+import 'web_speech_service.dart';
 
 enum VoiceGender { male, female }
+
+enum TtsProvider {
+  device,     // Current flutter_tts (robotic)
+  cloud,      // Google/Azure/Amazon (natural)
+  elevenlabs, // AI voices (premium)
+}
 
 enum CoachingStyle { motivational, calm, professional, energetic }
 
@@ -14,6 +22,7 @@ class VoiceCoachingService {
   VoiceCoachingService._internal();
 
   final FlutterTts _flutterTts = FlutterTts();
+  final WebSpeechService _webSpeechService = WebSpeechService();
 
   // Voice settings
   bool _isEnabled = true;
@@ -31,6 +40,9 @@ class VoiceCoachingService {
   List<Map<String, String>> _availableVoices = [];
   String? _selectedVoice;
 
+  // Enhanced TTS with better voice quality
+  TtsProvider _ttsProvider = TtsProvider.device; // Default to device TTS
+
   // Getters
   bool get isEnabled => _isEnabled;
   bool get isCountdownEnabled => _isCountdownEnabled;
@@ -42,6 +54,7 @@ class VoiceCoachingService {
   String get language => _language;
   VoiceGender get voiceGender => _voiceGender;
   CoachingStyle get coachingStyle => _coachingStyle;
+  TtsProvider get ttsProvider => _ttsProvider;
   List<Map<String, String>> get availableVoices => _availableVoices;
   String? get selectedVoice => _selectedVoice;
 
@@ -49,9 +62,45 @@ class VoiceCoachingService {
   Future<void> initialize() async {
     print('🎤 Initializing VoiceCoachingService...');
     await _loadSettings();
+    
+    // Initialize Web Speech API if on web
+    if (kIsWeb) {
+      await _webSpeechService.initialize();
+      if (_webSpeechService.isSupported) {
+        _ttsProvider = TtsProvider.cloud; // Use web speech as "cloud" provider
+        print('🌟 Using Web Speech API for better voice quality');
+      } else {
+        print('🌐 Web Speech API not fully supported yet, using flutter_tts');
+      }
+    }
+    
+    // Initialize flutter_tts as fallback
     await _initializeTts();
     await _loadAvailableVoices();
+    
+    // Ensure voice settings are applied after loading
+    await _applyVoiceSettings();
+    
     print('🎤 VoiceCoachingService initialized successfully');
+  }
+  
+  // Apply current voice settings to TTS engine
+  Future<void> _applyVoiceSettings() async {
+    try {
+      if (_selectedVoice != null) {
+        await _flutterTts.setVoice({'name': _selectedVoice!, 'locale': _language});
+        print('🎤 Voice settings applied: $_selectedVoice');
+      }
+      
+      await _flutterTts.setLanguage(_language);
+      await _flutterTts.setSpeechRate(_speechRate);
+      await _flutterTts.setVolume(_volume);
+      await _flutterTts.setPitch(_pitch);
+      
+      print('🎤 All TTS settings applied successfully');
+    } catch (e) {
+      print('🎤 Error applying voice settings: $e');
+    }
   }
 
   // Initialize TTS engine
@@ -117,9 +166,18 @@ class VoiceCoachingService {
           return locale.startsWith(_language.split('-')[0]);
         }).toList();
 
-        // Auto-select appropriate voice if none selected
+        // Auto-select appropriate voice if none selected, or re-select based on current gender preference
         if (_selectedVoice == null && _availableVoices.isNotEmpty) {
           _selectBestVoice();
+        } else if (_availableVoices.isNotEmpty) {
+          // Re-select best voice based on current gender preference
+          _selectBestVoice();
+        }
+        
+        // Apply the selected voice to TTS engine
+        if (_selectedVoice != null) {
+          await _flutterTts.setVoice({'name': _selectedVoice!, 'locale': _language});
+          print('🎤 Voice applied: $_selectedVoice (${_voiceGender.name} preference)');
         }
       }
     } catch (e) {
@@ -131,21 +189,38 @@ class VoiceCoachingService {
   void _selectBestVoice() {
     if (_availableVoices.isEmpty) return;
 
+    print('🎤 Selecting voice for ${_voiceGender.name} preference from ${_availableVoices.length} available voices');
+
     // Try to find voice matching gender preference
     final genderKeywords = _voiceGender == VoiceGender.female
-        ? ['female', 'woman', 'girl', 'samantha', 'karen', 'susan', 'victoria']
-        : ['male', 'man', 'boy', 'alex', 'daniel', 'tom', 'david'];
+        ? ['female', 'woman', 'girl', 'samantha', 'karen', 'susan', 'victoria', 'allison', 'ava', 'kate', 'zoe']
+        : ['male', 'man', 'boy', 'alex', 'daniel', 'tom', 'david', 'aaron', 'fred', 'jorge', 'liam'];
 
+    // Log available voices for debugging
+    for (final voice in _availableVoices) {
+      final name = voice['name'] ?? '';
+      final locale = voice['locale'] ?? '';
+      print('🎤 Available voice: $name ($locale)');
+    }
+
+    // Find best matching voice
+    String? bestMatch;
     for (final voice in _availableVoices) {
       final name = (voice['name'] ?? '').toLowerCase();
       if (genderKeywords.any((keyword) => name.contains(keyword))) {
-        _selectedVoice = voice['name'];
-        return;
+        bestMatch = voice['name'];
+        print('🎤 Found matching voice: $bestMatch for ${_voiceGender.name}');
+        break;
       }
     }
 
-    // Fallback to first available voice
-    _selectedVoice = _availableVoices.first['name'];
+    if (bestMatch != null) {
+      _selectedVoice = bestMatch;
+    } else {
+      // Fallback to first available voice
+      _selectedVoice = _availableVoices.first['name'];
+      print('🎤 No gender-specific voice found, using fallback: $_selectedVoice');
+    }
   }
 
   // Load settings from SharedPreferences
@@ -169,7 +244,10 @@ class VoiceCoachingService {
       final styleIndex = prefs.getInt('voice_coaching_style') ?? 0;
       _coachingStyle = CoachingStyle.values[styleIndex.clamp(0, CoachingStyle.values.length - 1)];
       
-      print('🔄 Voice coaching settings loaded - Enabled: $_isEnabled, Volume: ${(_volume * 100).round()}%, Rate: ${(_speechRate * 100).round()}%, Style: ${_coachingStyle.name}, Gender: ${_voiceGender.name}');
+      final providerIndex = prefs.getInt('voice_tts_provider') ?? 0;
+      _ttsProvider = TtsProvider.values[providerIndex.clamp(0, TtsProvider.values.length - 1)];
+      
+      print('🔄 Voice coaching settings loaded - Enabled: $_isEnabled, Volume: ${(_volume * 100).round()}%, Rate: ${(_speechRate * 100).round()}%, Style: ${_coachingStyle.name}, Gender: ${_voiceGender.name}, Provider: ${_ttsProvider.name}');
     } catch (e) {
       print('❌ Error loading voice settings: $e');
     }
@@ -190,6 +268,7 @@ class VoiceCoachingService {
       await prefs.setString('voice_language', _language);
       await prefs.setInt('voice_gender', _voiceGender.index);
       await prefs.setInt('voice_coaching_style', _coachingStyle.index);
+      await prefs.setInt('voice_tts_provider', _ttsProvider.index);
 
       if (_selectedVoice != null) {
         await prefs.setString('voice_selected_voice', _selectedVoice!);
@@ -228,6 +307,12 @@ class VoiceCoachingService {
 
   Future<void> setSpeechRate(double rate) async {
     _speechRate = rate.clamp(0.1, 1.0);
+    
+    // Update Web Speech API if available
+    if (kIsWeb && _webSpeechService.isSupported) {
+      await _webSpeechService.setRate(_speechRate);
+    }
+    
     await _flutterTts.setSpeechRate(_speechRate);
     print('🎤 Speech rate changed to ${(_speechRate * 100).round()}%');
     await _saveSettings();
@@ -235,6 +320,12 @@ class VoiceCoachingService {
 
   Future<void> setVolume(double volume) async {
     _volume = volume.clamp(0.0, 1.0);
+    
+    // Update Web Speech API if available
+    if (kIsWeb && _webSpeechService.isSupported) {
+      await _webSpeechService.setVolume(_volume);
+    }
+    
     await _flutterTts.setVolume(_volume);
     print('🎤 Voice volume changed to ${(_volume * 100).round()}%');
     await _saveSettings();
@@ -242,6 +333,12 @@ class VoiceCoachingService {
 
   Future<void> setPitch(double pitch) async {
     _pitch = pitch.clamp(0.5, 2.0);
+    
+    // Update Web Speech API if available
+    if (kIsWeb && _webSpeechService.isSupported) {
+      await _webSpeechService.setPitch(_pitch);
+    }
+    
     await _flutterTts.setPitch(_pitch);
     print('🎤 Voice pitch changed to ${_pitch.toStringAsFixed(1)}x');
     await _saveSettings();
@@ -249,11 +346,26 @@ class VoiceCoachingService {
 
   Future<void> setVoiceGender(VoiceGender gender) async {
     _voiceGender = gender;
-    _selectBestVoice();
-    if (_selectedVoice != null) {
-      await _flutterTts.setVoice({'name': _selectedVoice!, 'locale': _language});
-    }
     print('🎤 Voice gender changed to ${_voiceGender.name}');
+    
+    // Update Web Speech API if available
+    if (kIsWeb && _webSpeechService.isSupported) {
+      await _webSpeechService.setVoiceGender(_voiceGender.name);
+    }
+    
+    // Re-select best voice for flutter_tts
+    _selectBestVoice();
+    
+    // Apply the new voice to TTS engine
+    if (_selectedVoice != null) {
+      try {
+        await _flutterTts.setVoice({'name': _selectedVoice!, 'locale': _language});
+        print('🎤 Applied new voice: $_selectedVoice');
+      } catch (e) {
+        print('🎤 Error applying voice: $e');
+      }
+    }
+    
     await _saveSettings();
   }
 
@@ -265,7 +377,12 @@ class VoiceCoachingService {
 
   Future<void> setSelectedVoice(String voiceName) async {
     _selectedVoice = voiceName;
-    await _flutterTts.setVoice({'name': voiceName, 'locale': _language});
+    try {
+      await _flutterTts.setVoice({'name': voiceName, 'locale': _language});
+      print('🎤 Selected voice applied: $voiceName');
+    } catch (e) {
+      print('🎤 Error applying selected voice: $e');
+    }
     await _saveSettings();
   }
 
@@ -542,37 +659,37 @@ class VoiceCoachingService {
   Future<void> announceSetStart() async {
     if (!_isEnabled) return;
     final message = _getCoachingMessage(AnnouncementType.setStart);
-    await _speak(message);
+    await _speakEnhanced(message);
   }
 
   Future<void> announceSetEnd() async {
     if (!_isEnabled) return;
     final message = _getCoachingMessage(AnnouncementType.setEnd);
-    await _speak(message);
+    await _speakEnhanced(message);
   }
 
   Future<void> announceRestStart() async {
     if (!_isEnabled) return;
     final message = _getCoachingMessage(AnnouncementType.restStart);
-    await _speak(message);
+    await _speakEnhanced(message);
   }
 
   Future<void> announceRestEnd() async {
     if (!_isEnabled) return;
     final message = _getCoachingMessage(AnnouncementType.restEnd);
-    await _speak(message);
+    await _speakEnhanced(message);
   }
 
   Future<void> announceWorkoutComplete() async {
     if (!_isEnabled) return;
     final message = _getCoachingMessage(AnnouncementType.workoutComplete);
-    await _speak(message);
+    await _speakEnhanced(message);
   }
 
   Future<void> announceCountdown(int seconds) async {
     if (!_isEnabled || !_isCountdownEnabled) return;
     final message = _getCoachingMessage(AnnouncementType.countdown, context: {'seconds': seconds});
-    await _speak(message);
+    await _speakEnhanced(message);
   }
 
   Future<void> announceProgress(int currentSet, int totalSets) async {
@@ -581,19 +698,107 @@ class VoiceCoachingService {
       'currentSet': currentSet,
       'totalSets': totalSets,
     });
-    await _speak(message);
+    await _speakEnhanced(message);
   }
 
   Future<void> announceEncouragement() async {
     if (!_isEnabled || !_isEncouragementEnabled) return;
     final message = _getCoachingMessage(AnnouncementType.encouragement);
-    await _speak(message);
+    await _speakEnhanced(message);
   }
 
   // Test voice with sample message
   Future<void> testVoice() async {
+    print('🎤 Testing voice: $_selectedVoice (${_voiceGender.name})');
     final message = _getCoachingMessage(AnnouncementType.encouragement);
-    await _speak(message);
+    await _speakEnhanced(message);
+  }
+  
+  // Get current voice information for debugging
+  Map<String, dynamic> getCurrentVoiceInfo() {
+    return {
+      'selectedVoice': _selectedVoice,
+      'voiceGender': _voiceGender.name,
+      'availableVoicesCount': _availableVoices.length,
+      'language': _language,
+      'volume': _volume,
+      'speechRate': _speechRate,
+      'pitch': _pitch,
+    };
+  }
+
+  // Method to switch TTS provider
+  Future<void> setTtsProvider(TtsProvider provider) async {
+    // Check if the provider is actually available on this platform
+    bool isAvailable = true;
+    
+    switch (provider) {
+      case TtsProvider.device:
+        isAvailable = true; // Always available
+        break;
+      case TtsProvider.cloud:
+        isAvailable = kIsWeb; // Only available on web for now
+        break;
+      case TtsProvider.elevenlabs:
+        isAvailable = false; // Not implemented yet
+        break;
+    }
+    
+    if (!isAvailable) {
+      print('⚠️ TTS Provider ${provider.name} not available on this platform, falling back to device TTS');
+      _ttsProvider = TtsProvider.device;
+    } else {
+      _ttsProvider = provider;
+    }
+    
+    await _saveSettings();
+    print('🎤 TTS Provider changed to ${_ttsProvider.name}');
+  }
+
+  // Enhanced speak method with provider selection
+  Future<void> _speakEnhanced(String message) async {
+    switch (_ttsProvider) {
+      case TtsProvider.device:
+        // Use existing flutter_tts
+        await _speak(message);
+        break;
+      case TtsProvider.cloud:
+        // Use cloud TTS for natural voices
+        await _speakWithCloudTTS(message);
+        break;
+      case TtsProvider.elevenlabs:
+        // Use ElevenLabs for premium quality
+        await _speakWithElevenLabs(message);
+        break;
+    }
+  }
+
+  Future<void> _speakWithCloudTTS(String message) async {
+    try {
+      if (kIsWeb && _webSpeechService.isSupported) {
+        // Use Web Speech API for much better quality (when fully implemented)
+        await _webSpeechService.speak(message);
+        print('🌟 Speaking with Web Speech API: $message');
+      } else {
+        // Fallback to device TTS for now
+        print('🌟 Using device TTS (Web Speech API not ready yet): $message');
+        await _speak(message); // Fallback to device TTS
+      }
+    } catch (e) {
+      print('❌ Cloud TTS failed, falling back to device TTS: $e');
+      await _speak(message); // Fallback to device TTS
+    }
+  }
+
+  Future<void> _speakWithElevenLabs(String message) async {
+    try {
+      // Implementation would use ElevenLabs API
+      print('🚀 Speaking with ElevenLabs: $message');
+      // Add actual ElevenLabs implementation here
+    } catch (e) {
+      print('❌ ElevenLabs failed, falling back to device TTS: $e');
+      await _speak(message); // Fallback to device TTS
+    }
   }
 
   // Core speak method
@@ -609,6 +814,11 @@ class VoiceCoachingService {
   // Stop current speech
   Future<void> stop() async {
     try {
+      // Stop Web Speech if available
+      if (kIsWeb && _webSpeechService.isSupported) {
+        await _webSpeechService.stop();
+      }
+      
       await _flutterTts.stop();
     } catch (e) {
       print('Error stopping speech: $e');

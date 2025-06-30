@@ -36,8 +36,19 @@ dependencies:
   audioplayers: ^5.2.1
   path_provider: ^2.0.0
   
-  # Voice Coaching
-  flutter_tts: ^4.0.2
+  # Voice Coaching & TTS
+  flutter_tts: ^4.0.2              # Default TTS (robotic quality)
+  
+  # ✅ IMPLEMENTED: Web Speech API for much better voice quality (FREE!)
+  # - Works automatically on web browsers
+  # - High-quality voices built into browsers  
+  # - No API keys needed
+  # - Significantly better than flutter_tts
+  # - Uses existing http dependency for any future API integrations
+  
+  # Future TTS alternatives (not yet implemented):
+  # cloud_text_to_speech: ^3.0.0  # Google/Azure/Amazon TTS APIs (paid)
+  # elevenlabs: ^1.0.0             # AI voice generation (requires API key)
 
   # Local Storage (Sprint 1.2)
   sqflite: ^2.3.0
@@ -56,6 +67,7 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  http: ^1.4.0
 
 dev_dependencies:
   flutter_test:

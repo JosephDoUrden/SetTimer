@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Web Speech API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #00D4AA;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #00B999;
+        }
+        .voices {
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .voice-item {
+            padding: 5px;
+            margin: 2px 0;
+            background: #f8f8f8;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Web Speech API Test</h1>
+        <p>This tests the same API that SetTimer uses for better voice quality.</p>
+        
+        <button onclick="testBasicSpeech()">🗣️ Test Basic Speech</button>
+        <button onclick="testWorkoutMessages()">🏋️ Test Workout Messages</button>
+        <button onclick="stopSpeech()">🛑 Stop Speech</button>
+        <button onclick="loadVoices()">🎵 Load Voices</button>
+        
+        <div id="status"></div>
+        
+        <div class="voices">
+            <h3>Available Voices:</h3>
+            <div id="voicesList">Click "Load Voices" to see available voices</div>
+        </div>
+    </div>
+
+    <script>
+        let speechSynthesis = window.speechSynthesis;
+        let availableVoices = [];
+
+        function updateStatus(message) {
+            document.getElementById('status').innerHTML = '<p><strong>' + message + '</strong></p>';
+        }
+
+        function testBasicSpeech() {
+            if (!speechSynthesis) {
+                updateStatus('❌ Web Speech API not supported in this browser');
+                return;
+            }
+
+            const utterance = new SpeechSynthesisUtterance('Hello! This is a test of the Web Speech API. The voice quality is much better than the default text-to-speech.');
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+            
+            updateStatus('🔊 Speaking with Web Speech API...');
+            speechSynthesis.speak(utterance);
+        }
+
+        function testWorkoutMessages() {
+            if (!speechSynthesis) {
+                updateStatus('❌ Web Speech API not supported');
+                return;
+            }
+
+            const messages = [
+                "Let's go! Time to work! Give it everything you've got!",
+                "Excellent work! Set complete! You're crushing it!",
+                "Rest time! Catch your breath and get ready for the next set.",
+                "Incredible work! Workout complete! You absolutely crushed it today!"
+            ];
+
+            let index = 0;
+            function speakNext() {
+                if (index < messages.length) {
+                    const utterance = new SpeechSynthesisUtterance(messages[index]);
+                    utterance.rate = 0.9;
+                    utterance.pitch = 1.1;
+                    utterance.volume = 1.0;
+                    
+                    utterance.onend = () => {
+                        index++;
+                        setTimeout(speakNext, 1000); // Wait 1 second between messages
+                    };
+                    
+                    updateStatus('🏋️ Speaking workout message ' + (index + 1) + '/' + messages.length);
+                    speechSynthesis.speak(utterance);
+                } else {
+                    updateStatus('✅ All workout messages completed!');
+                }
+            }
+            
+            speakNext();
+        }
+
+        function stopSpeech() {
+            speechSynthesis.cancel();
+            updateStatus('🛑 Speech stopped');
+        }
+
+        function loadVoices() {
+            availableVoices = speechSynthesis.getVoices();
+            
+            if (availableVoices.length === 0) {
+                // Some browsers need a delay
+                setTimeout(() => {
+                    availableVoices = speechSynthesis.getVoices();
+                    displayVoices();
+                }, 100);
+            } else {
+                displayVoices();
+            }
+        }
+
+        function displayVoices() {
+            const voicesList = document.getElementById('voicesList');
+            
+            if (availableVoices.length === 0) {
+                voicesList.innerHTML = '<div class="voice-item">No voices found. Try refreshing the page.</div>';
+                return;
+            }
+
+            const englishVoices = availableVoices.filter(voice => voice.lang.startsWith('en'));
+            
+            let html = '<h4>English Voices (' + englishVoices.length + ' found):</h4>';
+            englishVoices.forEach((voice, index) => {
+                const gender = inferGender(voice.name);
+                html += '<div class="voice-item">' + 
+                        '<strong>' + voice.name + '</strong> (' + voice.lang + ') ' +
+                        '[' + gender + '] ' +
+                        (voice.localService ? '🖥️ Local' : '☁️ Remote') + 
+                        ' <button onclick="testVoice(' + index + ', \'' + voice.name + '\')">Test</button>' +
+                        '</div>';
+            });
+            
+            voicesList.innerHTML = html;
+            updateStatus('🎵 Found ' + englishVoices.length + ' English voices');
+        }
+
+        function inferGender(voiceName) {
+            const name = voiceName.toLowerCase();
+            const femaleKeywords = ['female', 'woman', 'girl', 'samantha', 'karen', 'susan', 'victoria', 'allison', 'ava', 'kate', 'zoe'];
+            const maleKeywords = ['male', 'man', 'boy', 'alex', 'daniel', 'tom', 'david', 'aaron', 'fred'];
+            
+            for (let keyword of femaleKeywords) {
+                if (name.includes(keyword)) return 'Female';
+            }
+            for (let keyword of maleKeywords) {
+                if (name.includes(keyword)) return 'Male';
+            }
+            return 'Unknown';
+        }
+
+        function testVoice(index, voiceName) {
+            const englishVoices = availableVoices.filter(voice => voice.lang.startsWith('en'));
+            const voice = englishVoices[index];
+            
+            const utterance = new SpeechSynthesisUtterance('Hello! This is ' + voiceName + '. I will be your workout coach today!');
+            utterance.voice = voice;
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+            
+            updateStatus('🔊 Testing voice: ' + voiceName);
+            speechSynthesis.speak(utterance);
+        }
+
+        // Load voices when page loads
+        window.addEventListener('load', () => {
+            updateStatus('🎤 Web Speech API Test Ready');
+            
+            // Check for voice support
+            if (!speechSynthesis) {
+                updateStatus('❌ Web Speech API not supported in this browser');
+            } else {
+                updateStatus('✅ Web Speech API is supported! Click buttons to test.');
+            }
+        });
+
+        // Load voices when they become available
+        speechSynthesis.addEventListener('voiceschanged', loadVoices);
+    </script>
+</body>
+</html> 
