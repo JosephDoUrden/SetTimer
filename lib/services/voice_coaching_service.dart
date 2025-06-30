@@ -47,9 +47,11 @@ class VoiceCoachingService {
 
   // Initialize voice coaching service
   Future<void> initialize() async {
+    print('🎤 Initializing VoiceCoachingService...');
     await _loadSettings();
     await _initializeTts();
     await _loadAvailableVoices();
+    print('🎤 VoiceCoachingService initialized successfully');
   }
 
   // Initialize TTS engine
@@ -96,7 +98,18 @@ class VoiceCoachingService {
     try {
       final voices = await _flutterTts.getVoices;
       if (voices != null) {
-        _availableVoices = List<Map<String, String>>.from(voices);
+        // Safely convert dynamic list to List<Map<String, String>>
+        _availableVoices = (voices as List).map((voice) {
+          final Map<String, String> convertedVoice = {};
+          if (voice is Map) {
+            voice.forEach((key, value) {
+              if (key != null && value != null) {
+                convertedVoice[key.toString()] = value.toString();
+              }
+            });
+          }
+          return convertedVoice;
+        }).toList();
 
         // Filter voices by language and gender preference
         _availableVoices = _availableVoices.where((voice) {
@@ -155,8 +168,10 @@ class VoiceCoachingService {
 
       final styleIndex = prefs.getInt('voice_coaching_style') ?? 0;
       _coachingStyle = CoachingStyle.values[styleIndex.clamp(0, CoachingStyle.values.length - 1)];
+      
+      print('🔄 Voice coaching settings loaded - Enabled: $_isEnabled, Volume: ${(_volume * 100).round()}%, Rate: ${(_speechRate * 100).round()}%, Style: ${_coachingStyle.name}, Gender: ${_voiceGender.name}');
     } catch (e) {
-      print('Error loading voice settings: $e');
+      print('❌ Error loading voice settings: $e');
     }
   }
 
@@ -179,47 +194,56 @@ class VoiceCoachingService {
       if (_selectedVoice != null) {
         await prefs.setString('voice_selected_voice', _selectedVoice!);
       }
+      
+      print('✅ Voice coaching settings saved - Enabled: $_isEnabled, Volume: ${(_volume * 100).round()}%, Rate: ${(_speechRate * 100).round()}%, Style: ${_coachingStyle.name}, Gender: ${_voiceGender.name}');
     } catch (e) {
-      print('Error saving voice settings: $e');
+      print('❌ Error saving voice settings: $e');
     }
   }
 
   // Update voice settings
   Future<void> setEnabled(bool enabled) async {
     _isEnabled = enabled;
+    print('🎤 Voice coaching enabled changed to $_isEnabled');
     await _saveSettings();
   }
 
   Future<void> setCountdownEnabled(bool enabled) async {
     _isCountdownEnabled = enabled;
+    print('🎤 Countdown announcements changed to $_isCountdownEnabled');
     await _saveSettings();
   }
 
   Future<void> setProgressEnabled(bool enabled) async {
     _isProgressEnabled = enabled;
+    print('🎤 Progress announcements changed to $_isProgressEnabled');
     await _saveSettings();
   }
 
   Future<void> setEncouragementEnabled(bool enabled) async {
     _isEncouragementEnabled = enabled;
+    print('🎤 Encouragement messages changed to $_isEncouragementEnabled');
     await _saveSettings();
   }
 
   Future<void> setSpeechRate(double rate) async {
     _speechRate = rate.clamp(0.1, 1.0);
     await _flutterTts.setSpeechRate(_speechRate);
+    print('🎤 Speech rate changed to ${(_speechRate * 100).round()}%');
     await _saveSettings();
   }
 
   Future<void> setVolume(double volume) async {
     _volume = volume.clamp(0.0, 1.0);
     await _flutterTts.setVolume(_volume);
+    print('🎤 Voice volume changed to ${(_volume * 100).round()}%');
     await _saveSettings();
   }
 
   Future<void> setPitch(double pitch) async {
     _pitch = pitch.clamp(0.5, 2.0);
     await _flutterTts.setPitch(_pitch);
+    print('🎤 Voice pitch changed to ${_pitch.toStringAsFixed(1)}x');
     await _saveSettings();
   }
 
@@ -229,11 +253,13 @@ class VoiceCoachingService {
     if (_selectedVoice != null) {
       await _flutterTts.setVoice({'name': _selectedVoice!, 'locale': _language});
     }
+    print('🎤 Voice gender changed to ${_voiceGender.name}');
     await _saveSettings();
   }
 
   Future<void> setCoachingStyle(CoachingStyle style) async {
     _coachingStyle = style;
+    print('🎤 Coaching style changed to ${_coachingStyle.name}');
     await _saveSettings();
   }
 

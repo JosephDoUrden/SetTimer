@@ -64,6 +64,8 @@ class _AudioSettingsViewState extends State<AudioSettingsView> with TickerProvid
                         _buildSoundPackSection(),
                         const SizedBox(height: 32),
                         _buildVolumeControlsSection(),
+                        const SizedBox(height: 20),
+                        _buildVolumeResetSection(),
                         const SizedBox(height: 32),
                         _buildAudioOptionsSection(),
                         const SizedBox(height: 32),
@@ -461,14 +463,111 @@ class _AudioSettingsViewState extends State<AudioSettingsView> with TickerProvid
           ),
           child: Slider(
             value: value,
-            onChanged: (newValue) {
-              setState(() {
-                onChanged(newValue);
-              });
+            onChanged: (newValue) async {
+              // Call the async save method first
+              await onChanged(newValue);
+              // Then update UI state
+              setState(() {});
             },
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildVolumeResetSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF00D4AA).withOpacity(0.1),
+            const Color(0xFF00D4AA).withOpacity(0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(
+          color: const Color(0xFF00D4AA).withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFF00D4AA).withOpacity(0.2),
+            ),
+            child: const Icon(
+              Icons.volume_up,
+              color: Color(0xFF00D4AA),
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Maximize Volume',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  'Reset to optimized loud settings',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.7),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await _audioService.resetVolumeToDefaults();
+              setState(() {});
+              
+              // Play test sound to demonstrate new volume
+              await _audioService.testSound(SoundType.setEnd);
+              
+              // Show feedback
+              HapticFeedback.lightImpact();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Volume reset to maximum settings'),
+                  backgroundColor: Color(0xFF00D4AA),
+                  behavior: SnackBarBehavior.floating,
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF00D4AA),
+              foregroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'Reset',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -573,10 +672,11 @@ class _AudioSettingsViewState extends State<AudioSettingsView> with TickerProvid
         ),
         Switch(
           value: value,
-          onChanged: (newValue) {
-            setState(() {
-              onChanged(newValue);
-            });
+          onChanged: (newValue) async {
+            // Call the async save method first
+            await onChanged(newValue);
+            // Then update UI state
+            setState(() {});
           },
           activeColor: color,
           activeTrackColor: color.withOpacity(0.3),
@@ -780,7 +880,10 @@ class _AudioSettingsViewState extends State<AudioSettingsView> with TickerProvid
   }
 
   Future<void> _selectSoundPack(SoundPack pack) async {
+    // Save the sound pack setting first
     await _audioService.setSoundPack(pack);
+    
+    // Update UI state
     setState(() {});
 
     // Play a test sound to preview the new pack

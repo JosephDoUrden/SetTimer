@@ -26,9 +26,9 @@ class AudioService {
 
   // Audio settings
   SoundPack _currentSoundPack = SoundPack.classic;
-  double _masterVolume = 0.8;
+  double _masterVolume = 1.0;  // Increased from 0.8 to 1.0 for louder sounds
   double _setVolume = 1.0;
-  double _restVolume = 0.8;
+  double _restVolume = 0.9;    // Increased from 0.8 to 0.9 for louder rest sounds
   double _completionVolume = 1.0;
   bool _isEnabled = true;
   bool _isVibrationEnabled = true;
@@ -44,8 +44,10 @@ class AudioService {
 
   // Initialize audio service
   Future<void> initialize() async {
+    print('🎵 Initializing AudioService...');
     await _loadSettings();
     await _audioPlayer.setPlayerMode(PlayerMode.lowLatency);
+    print('🎵 AudioService initialized successfully');
   }
 
   // Load settings from SharedPreferences
@@ -56,14 +58,16 @@ class AudioService {
       final soundPackIndex = prefs.getInt('sound_pack') ?? 0;
       _currentSoundPack = SoundPack.values[soundPackIndex.clamp(0, SoundPack.values.length - 1)];
 
-      _masterVolume = prefs.getDouble('master_volume') ?? 0.8;
+      _masterVolume = prefs.getDouble('master_volume') ?? 1.0;  // Increased default from 0.8 to 1.0
       _setVolume = prefs.getDouble('set_volume') ?? 1.0;
-      _restVolume = prefs.getDouble('rest_volume') ?? 0.8;
+      _restVolume = prefs.getDouble('rest_volume') ?? 0.9;    // Increased default from 0.8 to 0.9
       _completionVolume = prefs.getDouble('completion_volume') ?? 1.0;
       _isEnabled = prefs.getBool('audio_enabled') ?? true;
       _isVibrationEnabled = prefs.getBool('vibration_enabled') ?? true;
+      
+      print('🔄 Audio settings loaded - Master: ${(_masterVolume * 100).round()}%, Set: ${(_setVolume * 100).round()}%, Rest: ${(_restVolume * 100).round()}%, Completion: ${(_completionVolume * 100).round()}%, Pack: ${_currentSoundPack.displayName}');
     } catch (e) {
-      print('Error loading audio settings: $e');
+      print('❌ Error loading audio settings: $e');
     }
   }
 
@@ -79,8 +83,10 @@ class AudioService {
       await prefs.setDouble('completion_volume', _completionVolume);
       await prefs.setBool('audio_enabled', _isEnabled);
       await prefs.setBool('vibration_enabled', _isVibrationEnabled);
+      
+      print('✅ Audio settings saved - Master: ${(_masterVolume * 100).round()}%, Set: ${(_setVolume * 100).round()}%, Rest: ${(_restVolume * 100).round()}%, Completion: ${(_completionVolume * 100).round()}%');
     } catch (e) {
-      print('Error saving audio settings: $e');
+      print('❌ Error saving audio settings: $e');
     }
   }
 
@@ -93,21 +99,25 @@ class AudioService {
   // Update volume settings
   Future<void> setMasterVolume(double volume) async {
     _masterVolume = volume.clamp(0.0, 1.0);
+    print('🔊 Master volume changed to ${(_masterVolume * 100).round()}%');
     await _saveSettings();
   }
 
   Future<void> setSetVolume(double volume) async {
     _setVolume = volume.clamp(0.0, 1.0);
+    print('🔊 Set volume changed to ${(_setVolume * 100).round()}%');
     await _saveSettings();
   }
 
   Future<void> setRestVolume(double volume) async {
     _restVolume = volume.clamp(0.0, 1.0);
+    print('🔊 Rest volume changed to ${(_restVolume * 100).round()}%');
     await _saveSettings();
   }
 
   Future<void> setCompletionVolume(double volume) async {
     _completionVolume = volume.clamp(0.0, 1.0);
+    print('🔊 Completion volume changed to ${(_completionVolume * 100).round()}%');
     await _saveSettings();
   }
 
@@ -119,6 +129,15 @@ class AudioService {
 
   Future<void> setVibrationEnabled(bool enabled) async {
     _isVibrationEnabled = enabled;
+    await _saveSettings();
+  }
+
+  // Reset volume settings to optimized defaults for louder sound
+  Future<void> resetVolumeToDefaults() async {
+    _masterVolume = 1.0;   // Maximum master volume
+    _setVolume = 1.0;      // Maximum set sounds
+    _restVolume = 0.9;     // High rest sounds
+    _completionVolume = 1.0; // Maximum completion sounds
     await _saveSettings();
   }
 
@@ -204,12 +223,18 @@ class AudioService {
   // Fallback system sound method
   Future<void> _playSystemSound(SoundType soundType, double volume) async {
     final config = _getSystemSoundConfig(soundType);
+    
+    // Use alarm volume for important sounds (set end, workout complete, warning)
+    bool useAlarmVolume = soundType == SoundType.setEnd || 
+                          soundType == SoundType.workoutComplete || 
+                          soundType == SoundType.warning;
+    
     await FlutterRingtonePlayer().play(
       android: config['android'],
       ios: config['ios'],
       looping: config['looping'] ?? false,
       volume: volume,
-      asAlarm: false,
+      asAlarm: useAlarmVolume,  // Use alarm volume for important sounds
     );
   }
 

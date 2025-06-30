@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import '../models/timer_model.dart';
 import '../models/preset_model.dart';
 import '../services/audio_service.dart';
@@ -125,6 +126,14 @@ class TimerController extends ChangeNotifier with WidgetsBindingObserver {
       _voiceCoachingService.announceSetStart();
       _backgroundService.enableBackgroundMode();
 
+      // Enable wakelock to prevent screen from sleeping during workout
+      try {
+        await WakelockPlus.enable();
+        print('🔒 Screen wakelock enabled - screen will stay on during workout');
+      } catch (e) {
+        print('⚠️ Failed to enable wakelock: $e');
+      }
+
       // Register for app lifecycle events
       WidgetsBinding.instance.addObserver(this);
 
@@ -137,6 +146,14 @@ class TimerController extends ChangeNotifier with WidgetsBindingObserver {
     if (_timer.state == TimerState.running || _timer.state == TimerState.resting) {
       _countdownTimer?.cancel();
       _timer = _timer.copyWith(state: TimerState.paused);
+
+      // Disable wakelock when paused to allow screen to sleep
+      try {
+        await WakelockPlus.disable();
+        print('🔓 Screen wakelock disabled - screen can sleep while paused');
+      } catch (e) {
+        print('⚠️ Failed to disable wakelock: $e');
+      }
 
       // Pause session tracking
       await _sessionService.pauseSession();
@@ -152,6 +169,14 @@ class TimerController extends ChangeNotifier with WidgetsBindingObserver {
     // Abandon current session if exists
     if (_sessionService.hasActiveSession) {
       await _sessionService.abandonSession();
+    }
+
+    // Disable wakelock when resetting
+    try {
+      await WakelockPlus.disable();
+      print('🔓 Screen wakelock disabled - timer reset');
+    } catch (e) {
+      print('⚠️ Failed to disable wakelock: $e');
     }
 
     // Unregister from app lifecycle events
@@ -278,6 +303,14 @@ class TimerController extends ChangeNotifier with WidgetsBindingObserver {
       // Continue with completion even if there are errors
     }
 
+    // Disable wakelock when workout is completed
+    try {
+      await WakelockPlus.disable();
+      print('🔓 Screen wakelock disabled - workout completed');
+    } catch (e) {
+      print('⚠️ Failed to disable wakelock: $e');
+    }
+
     // Unregister from app lifecycle events
     WidgetsBinding.instance.removeObserver(this);
 
@@ -308,6 +341,16 @@ class TimerController extends ChangeNotifier with WidgetsBindingObserver {
 
       if (secondsPassed > 0) {
         _syncTimerAfterBackground(secondsPassed);
+      }
+
+      // Re-enable wakelock when resuming active timer
+      if (_timer.state == TimerState.running || _timer.state == TimerState.resting) {
+        try {
+          await WakelockPlus.enable();
+          print('🔒 Screen wakelock re-enabled after app resume');
+        } catch (e) {
+          print('⚠️ Failed to re-enable wakelock: $e');
+        }
       }
 
       await _sessionService.resumeSession();
@@ -414,6 +457,12 @@ class TimerController extends ChangeNotifier with WidgetsBindingObserver {
     _backgroundService.disableBackgroundMode();
     _sessionService.dispose();
     WidgetsBinding.instance.removeObserver(this);
+    
+    // Ensure wakelock is disabled when disposing
+    WakelockPlus.disable().catchError((e) {
+      print('⚠️ Failed to disable wakelock during dispose: $e');
+    });
+    
     super.dispose();
   }
 }

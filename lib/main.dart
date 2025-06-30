@@ -92,7 +92,7 @@ class WorkoutSetTimerApp extends StatelessWidget {
           ),
 
           // Dialog theme for better consistency
-          dialogTheme: const DialogTheme(
+          dialogTheme: const DialogThemeData(
             backgroundColor: Color(0xFF1A1A1A),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(20)),

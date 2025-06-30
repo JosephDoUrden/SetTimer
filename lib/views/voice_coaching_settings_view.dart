@@ -192,7 +192,7 @@ class _VoiceCoachingSettingsViewState extends State<VoiceCoachingSettingsView> w
                 'Enable voice announcements during workouts',
                 Icons.record_voice_over,
                 _voiceService.isEnabled,
-                (value) => _voiceService.setEnabled(value),
+                (value) async => await _voiceService.setEnabled(value),
                 const Color(0xFF9C27B0),
               ),
               const SizedBox(height: 16),
@@ -264,10 +264,11 @@ class _VoiceCoachingSettingsViewState extends State<VoiceCoachingSettingsView> w
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: () {
-            setState(() {
-              _voiceService.setVoiceGender(gender);
-            });
+          onTap: () async {
+            // Save voice gender setting first
+            await _voiceService.setVoiceGender(gender);
+            // Then update UI state
+            setState(() {});
           },
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -368,10 +369,11 @@ class _VoiceCoachingSettingsViewState extends State<VoiceCoachingSettingsView> w
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            setState(() {
-              _voiceService.setCoachingStyle(style);
-            });
+          onTap: () async {
+            // Save coaching style setting first
+            await _voiceService.setCoachingStyle(style);
+            // Then update UI state
+            setState(() {});
           },
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -562,10 +564,11 @@ class _VoiceCoachingSettingsViewState extends State<VoiceCoachingSettingsView> w
             value: value,
             min: min,
             max: max,
-            onChanged: (newValue) {
-              setState(() {
-                onChanged(newValue);
-              });
+            onChanged: (newValue) async {
+              // Call the async save method first
+              await onChanged(newValue);
+              // Then update UI state
+              setState(() {});
             },
           ),
         ),
@@ -745,10 +748,11 @@ class _VoiceCoachingSettingsViewState extends State<VoiceCoachingSettingsView> w
         ),
         Switch(
           value: value,
-          onChanged: (newValue) {
-            setState(() {
-              onChanged(newValue);
-            });
+          onChanged: (newValue) async {
+            // Call the async save method first
+            await onChanged(newValue);
+            // Then update UI state
+            setState(() {});
           },
           activeColor: color,
           activeTrackColor: color.withOpacity(0.3),
